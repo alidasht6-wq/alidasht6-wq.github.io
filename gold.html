@@ -1,6 +1,105 @@
-/* -------------------------
-  AutoFetch: زمان‌بندی بین 18:00 تا 22:00 (اصلاح‌شده)
---------------------------*/
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>داشبورد نهایی طلای ۱۸ عیار — حرفه‌ای (با AutoFetch و Alerts)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg1:#0f1720;--card:#1f2937;--accent:#ffd369;--muted:#9bd7ff}
+*{box-sizing:border-box}
+body{margin:0;padding:14px;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg1),#0b1116);color:#fff}
+.container{max-width:980px;margin:0 auto}
+.header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.title{font-size:1.25rem;color:var(--accent);font-weight:700}
+.small{font-size:0.85rem;color:#cbd5e1}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 6px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,211,105,0.06)}
+.row{display:flex;gap:10px;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:740px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:0.85rem;margin-bottom:6px;color:#d1d5db}
+input[type=number],input[type=text]{width:100%;padding:8px;border-radius:8px;border:none;background:#0b1220;color:#fff}
+button{padding:9px 12px;border-radius:10px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff}
+.result{background:#071018;padding:10px;border-radius:8px;margin-top:8px;border:1px solid rgba(255,255,255,0.03);font-size:0.95rem}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:0.95rem}
+.tip{color:var(--muted);font-size:0.88rem;line-height:1.45}
+.footer-small{font-size:0.82rem;color:#94a3b8;margin-top:8px}
+.toggle{display:inline-block;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:700}
+.toggle.on{background:#16a34a;color:#fff}
+.toggle.off{background:#ef4444;color:#fff}
+.signals-list{max-height:160px;overflow:auto;margin-top:8px;border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.03);background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
+.signal-item{padding:6px;border-bottom:1px dashed rgba(255,255,255,0.03);font-size:0.9rem}
+.canvas-wrap{background:#06121a;padding:8px;border-radius:10px;margin-top:8px}
+.legend{display:flex;gap:8px;align-items:center;margin-top:8px}
+.legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.entry-dot{background:#16a34a}
+.exit-dot{background:#ef4444}
+.hr{height:1px;background:rgba(255,255,255,0.03);margin:12px 0;border-radius:2px}
+.small-muted{color:#94a3b8;font-size:0.85rem}
+.input-inline{display:flex;gap:8px}
+.status-badge{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:700}
+.status-normal{background:#374151;color:#fff}
+.status-high{background:#065f46;color:#fff}
+.status-low{background:#7f1d1d;color:#fff}
+.counter-box{display:flex;gap:12px;align-items:center}
+.counter-box div{min-width:120px}
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- ... محتویات UI همانند قبل ... -->
+  <!-- بخش AutoFetch و تنظیمات آن -->
+  <div class="card">
+    <h3 style="margin:0 0 8px;color:var(--accent)">تنظیمات خودکار API و هشدار قیمت</h3>
+    <div class="grid">
+      <div>
+        <label>درخواست کل در بازه 18:00–22:00 (حداکثر 1500)</label>
+        <input id="maxRequests" type="number" value="100" min="1" max="1500">
+      </div>
+      <div>
+        <label>اجرای خودکار؟</label>
+        <div style="display:flex;gap:8px"><button onclick="startAutoFetch()">▶ شروع در 18:00</button><button class="btn-ghost" onclick="stopAutoFetch()">■ توقف</button></div>
+      </div>
+      <div>
+        <label>حد پایین هشدار (تومان)</label>
+        <input id="lowLimit" type="number" placeholder="مثال: 12000000">
+      </div>
+      <div>
+        <label>حد بالا هشدار (تومان)</label>
+        <input id="highLimit" type="number" placeholder="مثال: 18000000">
+      </div>
+    </div>
+
+    <div class="hr"></div>
+    <div class="counter-box">
+      <div>انجام شده: <strong id="doneCount">0</strong></div>
+      <div>باقی‌مانده: <strong id="leftCount">0</strong></div>
+      <div>بعدی در: <strong id="nextIn">—</strong> ثانیه</div>
+    </div>
+    <div class="small-muted" style="margin-top:8px">تذکر: اگر صفحه را ببندی اجرا قطع می‌شود.</div>
+  </div>
+
+</div>
+
+<script>
+// -------------------------
+// تنظیم اولیه و متغیرها
+// -------------------------
+const BRS_URL = "https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU";
+let apiCounter = parseInt(localStorage.getItem('apiCounter')) || 0;
+let historyData = JSON.parse(localStorage.getItem('goldHistory')) || [];
+let signals = JSON.parse(localStorage.getItem('signals')) || [];
+let notifyActive = (localStorage.getItem('notifyActive') === '1');
+if(notifyActive){ document.getElementById('notifyBtn')?.classList?.add('on'); document.getElementById('notifyBtn')?.classList?.remove('off'); document.getElementById('notifyBtn').innerText='🔔 نوتیفیکیشن روشن'; }
+document.getElementById('apiCounter')?.innerText = apiCounter;
+
+// AutoFetch state
+let autoState = { running:false, timerId:null, countdownId:null, nextAt: null, done:0, left:0 };
+
+// -------------------------
+// AutoFetch اصلاح‌شده
+// -------------------------
 function startAutoFetch(){
   if(autoState.running){ alert('AutoFetch در حال اجراست'); return; }
   const maxReq = parseInt(document.getElementById('maxRequests').value) || 100;
@@ -8,14 +107,14 @@ function startAutoFetch(){
 
   const now = new Date();
   const startHour = 18, endHour = 22;
-  const windowSeconds = (endHour - startHour) * 3600; // 4 ساعت = 14400 ثانیه
+  const windowSeconds = (endHour - startHour) * 3600;
   let remainingRequests = Math.max(0, maxReq - apiCounter);
   if(remainingRequests === 0){
     document.getElementById('goldResult').innerText = `⚠ سقف ${maxReq} درخواست API امروز رسید!`;
     return;
   }
   let intervalSec = Math.floor(windowSeconds / remainingRequests);
-  if(intervalSec < 3) intervalSec = 3; // حداقل فاصله 3 ثانیه
+  if(intervalSec < 3) intervalSec = 3;
 
   autoState.running = true;
   autoState.done = 0;
@@ -28,9 +127,8 @@ function startAutoFetch(){
     const hour = now.getHours();
     let nextDelay = 0;
 
-    if(hour >= startHour && hour < endHour){
-      nextDelay = 0; // اجرا فوری
-    } else {
+    if(hour >= startHour && hour < endHour){ nextDelay = 0; }
+    else {
       const nextStart = new Date(now);
       nextStart.setHours(startHour,0,0,0);
       if(now >= nextStart) nextStart.setDate(nextStart.getDate() + 1);
@@ -47,9 +145,7 @@ function startAutoFetch(){
           beginLoop();
         }
       },1000);
-    } else {
-      beginLoop();
-    }
+    } else { beginLoop(); }
   }
 
   function beginLoop(){
@@ -65,9 +161,7 @@ function startAutoFetch(){
         document.getElementById('doneCount').innerText = autoState.done;
         document.getElementById('leftCount').innerText = autoState.left;
         autoState.nextAt = Date.now() + intervalSec*1000;
-      } else {
-        stopAutoFetch();
-      }
+      } else { stopAutoFetch(); }
     }, intervalSec * 1000);
 
     autoState.countdownId = setInterval(()=>{
@@ -93,3 +187,6 @@ function stopAutoFetch(){
   document.getElementById('leftCount').innerText = '0';
   document.getElementById('goldResult').innerText = 'AutoFetch متوقف شد.';
 }
+</script>
+</body>
+</html>
