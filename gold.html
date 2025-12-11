@@ -1,204 +1,95 @@
-<!-- در این نسخه جدید، تایمر دریافت API بین 18:00 تا 22:00 + تقسیم هوشمند تعداد درخواست‌ها + شمارش معکوس واقعی اضافه می‌شود.
-کد کامل HTML+CSS+JS به‌صورت یکجا و آماده اجرا -->
+/* -------------------------
+  AutoFetch: زمان‌بندی بین 18:00 تا 22:00 (اصلاح‌شده)
+--------------------------*/
+function startAutoFetch(){
+  if(autoState.running){ alert('AutoFetch در حال اجراست'); return; }
+  const maxReq = parseInt(document.getElementById('maxRequests').value) || 100;
+  if(maxReq < 1 || maxReq > 1500){ alert('حداکثر باید بین 1 و 1500 باشد'); return; }
 
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>داشبورد نهایی طلای ۱۸ عیار — حرفه‌ای تایمر API</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-/* ——— استایل قبلی + گرافیک همان نسخه قبل ——— */
-:root{--bg1:#0f1720;--card:#1f2937;--accent:#ffd369;--muted:#9bd7ff}
-body{margin:0;padding:14px;font-family:system-ui;direction:rtl;background:linear-gradient(180deg,var(--bg1),#0b1116);color:#fff}
-.container{max-width:960px;margin:auto}
-.card{background:#1a2433;border-radius:14px;padding:14px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.05);box-shadow:0 8px 30px rgba(0,0,0,0.4)}
-button{padding:9px 12px;border-radius:10px;border:none;background:var(--accent);font-weight:700;cursor:pointer}
-.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.1);color:#fff}
-.toggle{display:inline-block;padding:6px 10px;border-radius:10px;font-weight:700}
-.toggle.on{background:#16a34a}.toggle.off{background:#ef4444}
-#apiTimer{font-size:1rem;color:var(--muted);margin-top:6px}
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="card">
-    <h2 style="color:var(--accent);margin:0 0 10px">زمان‌بندی هوشمند API (۱۸ تا ۲۲)</h2>
-    <label>حداکثر تعداد درخواست امروز:</label>
-    <input id="maxApiInput" type="number" placeholder="مثلاً 1500" style="width:140px;padding:6px;border-radius:6px;border:none;background:#0b1220;color:#fff">
-    <button onclick="saveApiLimit()">✔ ذخیره محدودیت</button>
-
-    <div id="apiTimer">در انتظار شروع بازه ...</div>
-
-    <div style="margin-top:10px">
-      <button onclick="toggleAutoAPI()" id="autoApiBtn" class="toggle off">دریافت خودکار API: خاموش</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>📡 دریافت دستی API</h3>
-    <button class="btn-ghost" onclick="manualAPI()">دریافت از API</button>
-    <div id="manualResult" style="margin-top:6px;color:var(--muted)">وضعیت: —</div>
-  </div>
-
-  <div class="card">
-    <h3>⏳ شمارنده درخواست‌ها</h3>
-    <div>تعداد مصرف‌شده امروز: <span id="usedCount">0</span></div>
-    <div>حداکثر مقدار: <span id="maxCount">0</span></div>
-  </div>
-</div>
-
-<script>
-/* ---------------------- ذخیره و بارگذاری ---------------------- */
-let maxApi = parseInt(localStorage.getItem("maxApi")||"0");
-let usedApi = parseInt(localStorage.getItem("usedApi")||"0");
-let autoApi = localStorage.getItem("autoApi") === "1";
-
-updateDisplay();
-
-function saveApiLimit(){
-  const v = parseInt(document.getElementById("maxApiInput").value);
-  if(!v){alert("مقدار معتبر وارد کنید");return;}
-  maxApi = v;
-  localStorage.setItem("maxApi",v);
-  updateDisplay();
-}
-
-function updateDisplay(){
-  document.getElementById("maxCount").innerText = maxApi;
-  document.getElementById("usedCount").innerText = usedApi;
-  document.getElementById("autoApiBtn").className = autoApi?"toggle on":"toggle off";
-  document.getElementById("autoApiBtn").innerText = autoApi?"دریافت خودکار API: روشن":"دریافت خودکار API: خاموش";
-}
-
-/* ---------------------- اجرای API ---------------------- */
-async function callAPI(){
-  if(usedApi >= maxApi) return;
-
-  try{
-    const res = await fetch("https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU");
-    const j = await res.json();
-    usedApi++;
-    localStorage.setItem("usedApi",usedApi);
-    updateDisplay();
-    console.log("API Called",usedApi,j);
-    return j;
-  }catch(e){console.warn(e);}
-}
-
-function manualAPI(){
-  callAPI();
-  document.getElementById("manualResult").innerText = "درخواست ارسال شد...";
-}
-
-/* ---------------------- تایمر بین 18 تا 22 ---------------------- */
-const START_H = 18;
-const END_H = 22;
-let interval = null;
-
-function toggleAutoAPI(){
-  autoApi = !autoApi;
-  localStorage.setItem("autoApi", autoApi?"1":"0");
-  updateDisplay();
-}
-
-setInterval(updateTimer, 1000);
-updateTimer();
-
-function updateTimer(){
   const now = new Date();
-  const h = now.getHours();
-  const m = now.getMinutes();
-  const s = now.getSeconds();
-
-  const timerEl = document.getElementById("apiTimer");
-
-  // قبل از 18
-  if(h < START_H){
-    const diffMs = new Date(now.getFullYear(),now.getMonth(),now.getDate(),START_H,0,0) - now;
-    return timerEl.innerText = `باقیمانده تا شروع بازه: ${formatTime(diffMs)}`;
+  const startHour = 18, endHour = 22;
+  const windowSeconds = (endHour - startHour) * 3600; // 4 ساعت = 14400 ثانیه
+  let remainingRequests = Math.max(0, maxReq - apiCounter);
+  if(remainingRequests === 0){
+    document.getElementById('goldResult').innerText = `⚠ سقف ${maxReq} درخواست API امروز رسید!`;
+    return;
   }
+  let intervalSec = Math.floor(windowSeconds / remainingRequests);
+  if(intervalSec < 3) intervalSec = 3; // حداقل فاصله 3 ثانیه
 
-  // بعد از 22
-  if(h >= END_H){
-    return timerEl.innerText = "پایان بازه — فردا از نو";
-  }
+  autoState.running = true;
+  autoState.done = 0;
+  autoState.left = remainingRequests;
+  document.getElementById('doneCount').innerText = autoState.done;
+  document.getElementById('leftCount').innerText = autoState.left;
 
-  // داخل بازه 18–22
-  const totalWindow = (END_H - START_H) * 3600; // 4 ساعت
-  const passed = ((h-START_H)*3600) + (m*60) + s;
-  const remain = totalWindow - passed;
+  function scheduleNext(){
+    const now = new Date();
+    const hour = now.getHours();
+    let nextDelay = 0;
 
-  timerEl.innerText = `در حال اجرا — زمان باقی‌مانده: ${formatSeconds(remain)}`;
+    if(hour >= startHour && hour < endHour){
+      nextDelay = 0; // اجرا فوری
+    } else {
+      const nextStart = new Date(now);
+      nextStart.setHours(startHour,0,0,0);
+      if(now >= nextStart) nextStart.setDate(nextStart.getDate() + 1);
+      nextDelay = Math.floor((nextStart - now)/1000);
+    }
 
-  if(autoApi && maxApi > 0){
-    const intervalSec = Math.floor(totalWindow / maxApi);
-
-    // اجرای برنامه زمان‌بندی‌شده
-    if(passed % intervalSec === 0){
-      callAPI();
+    if(nextDelay > 0){
+      document.getElementById('nextIn').innerText = nextDelay;
+      autoState.countdownId = setInterval(()=>{
+        nextDelay -= 1;
+        document.getElementById('nextIn').innerText = nextDelay;
+        if(nextDelay <= 0){
+          clearInterval(autoState.countdownId);
+          beginLoop();
+        }
+      },1000);
+    } else {
+      beginLoop();
     }
   }
+
+  function beginLoop(){
+    autoState.nextAt = Date.now() + intervalSec*1000;
+    autoState.timerId = setInterval(async ()=>{
+      const now = new Date();
+      const hour = now.getHours();
+      if(hour >= startHour && hour < endHour){
+        if(apiCounter >= maxReq){ stopAutoFetch(); return; }
+        await fetchFromAPI();
+        autoState.done += 1;
+        autoState.left = Math.max(0, maxReq - apiCounter);
+        document.getElementById('doneCount').innerText = autoState.done;
+        document.getElementById('leftCount').innerText = autoState.left;
+        autoState.nextAt = Date.now() + intervalSec*1000;
+      } else {
+        stopAutoFetch();
+      }
+    }, intervalSec * 1000);
+
+    autoState.countdownId = setInterval(()=>{
+      if(!autoState.nextAt) return;
+      const s = Math.max(0, Math.ceil((autoState.nextAt - Date.now())/1000));
+      document.getElementById('nextIn').innerText = s;
+    }, 500);
+  }
+
+  scheduleNext();
+  document.getElementById('goldResult').innerText = 'AutoFetch برنامه‌ریزی شد؛ منتظر شروع یا اجرای آن باشید.';
 }
 
-function formatTime(ms){
-  const sec = Math.floor(ms/1000);
-  return formatSeconds(sec);
+function stopAutoFetch(){
+  if(autoState.timerId) clearInterval(autoState.timerId);
+  if(autoState.countdownId) clearInterval(autoState.countdownId);
+  autoState.running = false;
+  autoState.timerId = null;
+  autoState.countdownId = null;
+  autoState.nextAt = null;
+  document.getElementById('nextIn').innerText = '—';
+  document.getElementById('doneCount').innerText = '0';
+  document.getElementById('leftCount').innerText = '0';
+  document.getElementById('goldResult').innerText = 'AutoFetch متوقف شد.';
 }
-
-function formatSeconds(t){
-  const h = Math.floor(t/3600);
-  const m = Math.floor((t%3600)/60);
-  const s = t%60;
-  return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-}
-</script>
-</body>
-</html>
-<!-- نسخه کامل اصلاح‌شده با گرافیک حرفه‌ای، زمان‌بندی دقیق API، تقسیم هوشمند درخواست‌ها، شمارنده معکوس و نوتیفیکیشن -->
-<html><head><meta charset='utf-8'><title>Golden Signal Pro</title><style>body{font-family:'IRANSans',sans-serif;background:#f3f5ff;margin:0;padding:0;text-align:center}#app{width:90%;max-width:700px;margin:auto;margin-top:15px} .box{background:#fff;padding:15px;margin-top:12px;border-radius:18px;box-shadow:0 4px 14px rgba(0,0,0,.08);text-align:right;direction:rtl} .title{font-size:20px;font-weight:bold;color:#2b3abf;margin-bottom:10px} button{background:#2b3abf;color:#fff;border:0;padding:10px 18px;border-radius:12px;font-size:16px;margin-top:10px;cursor:pointer} button.red{background:#c62828} #apiCounter{font-size:18px;margin-top:10px;color:#283593;font-weight:bold} #countdown{font-size:18px;color:#1b5e20;font-weight:bold;margin-top:10px} </style></head><body><div id='app'>
-<div class='box'><div class='title'>⚙ تنظیمات API</div>
-کل درخواست روزانه: <input id='maxReq' type='number' value='1500' style='width:120px;font-size:17px;'>
-<br>شروع خودکار: ساعت 18 تا 22<br>
-<button onclick='startAutoAPI()'>▶ شروع دریافت خودکار API</button>
-<button class='red' onclick='stopAutoAPI()'>■ توقف</button>
-<div id='apiCounter'>درخواست ثبت‌شده: 0</div>
-<div id='countdown'>زمان باقیمانده: --:--</div></div>
-
-<div class='box'><div class='title'>📊 قیمت‌های بازار</div>
-<button onclick='fetchAPI()'>📡 دریافت قیمت از API</button>
-<div id='lastPrice'>—</div></div>
-
-<div class='box'><div class='title'>📉 سیگنال حرفه‌ای</div><div id='signalBox'>در انتظار داده…</div></div>
-
-<div class='box'><div class='title'>📘 توضیحات برنامه</div>
-• این برنامه هر قیمت طلای ۱۸ عیار، دلار و انس را از API دریافت کرده و حباب، روند و RSI را محاسبه می‌کند.<br>
-• RSI واقعی از API جهانی گرفته شده است.<br>
-• زمان مناسب نوسان‌گیری: ساعت ۱۸ تا ۲۲ (شروع همزمان معاملات جهانی و ایران).<br>
-• در این ساعات بیشترین نوسان ثبت می‌شود.<br>
-• برنامه به صورت خودکار درخواست‌ها را در بازه ۴ ساعته پخش می‌کند.<br>
-• نوتیفیکیشن هنگام رسیدن قیمت به حد بالا یا پایین فعال می‌شود.</div>
-
-</div>
-<script>
-let apiKey='BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU';
-let autoTimer=null; let apiUsed=0; let nextRequestAt=null;
-
-function fetchAPI(){apiUsed++; document.getElementById('apiCounter').innerHTML='درخواست ثبت‌شده: '+apiUsed;
-fetch('https://brsapi.ir/Api/Market/Gold_Currency.php?key='+apiKey).then(r=>r.json()).then(d=>{
-let g18=d.gold18.price; let dollar=d.dollar.price; let ounce=d.ounce.price;
-let bubble=(g18 - (ounce*1000/4.331))*1;
-document.getElementById('lastPrice').innerHTML='آخرین قیمت طلا: '+g18+' تومان<br>حباب: '+bubble.toFixed(0);
-updateSignal(bubble);
-});}
-
-function updateSignal(b){let box=document.getElementById('signalBox'); if(b<0) box.innerHTML='🟢 سیگنال خرید — حباب منفی'; else if(b>25000) box.innerHTML='🔴 سیگنال فروش — حباب مثبت'; else box.innerHTML='⚖ خنثی';}
-
-function startAutoAPI(){let max=document.getElementById('maxReq').value*1; let interval=(4*60*60)/max; interval*=1000;
-autoTimer=setInterval(()=>{fetchAPI(); updateCountdown(interval);}, interval);
-alert('دریافت خودکار API فعال شد');}
-function stopAutoAPI(){clearInterval(autoTimer); alert('متوقف شد');}
-function updateCountdown(i){let sec=i/1000; document.getElementById('countdown').innerHTML='درخواست بعدی: '+Math.floor(sec/60)+' دقیقه '+Math.floor(sec%60)+' ثانیه';}
-</script>
-</body></html>
