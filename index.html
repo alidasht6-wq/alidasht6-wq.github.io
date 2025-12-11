@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>حباب طلای ۱۸ عیار — نسخه رایگان</title>
+<style>
+body { font-family: Tahoma; direction: rtl; padding: 20px; background: #f5f5f5; }
+button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+.result { margin-top: 15px; font-size: 18px; font-weight: bold; }
+.buy { color: green; }
+.sell { color: red; }
+</style>
+</head>
+<body>
+
+<h2>محاسبه‌گر حباب طلای ۱۸ عیار (نسخه رایگان)</h2>
+<button onclick="calc()">🔄 بروزرسانی و محاسبه</button>
+
+<div id="out" class="result">در انتظار...</div>
+
+<script>
+async function calc() {
+    let out = document.getElementById('out');
+    out.innerHTML = "در حال دریافت قیمت‌ها... ⏳";
+
+    try {
+
+        // --- قیمت دلار از TGJU ---
+        let usdReq = await fetch("https://api.tgju.org/v1/latest/price_dollar_rl");
+        let usdJson = await usdReq.json();
+        let usd = parseInt(usdJson.data.price.value);
+
+        // --- قیمت طلای ۱۸ عیار از TGJU ---
+        let goldReq = await fetch("https://api.tgju.org/v1/latest/geram18");
+        let goldJson = await goldReq.json();
+        let goldMarket = parseInt(goldJson.data.price.value);
+
+        // --- قیمت اونس از API رایگان ---
+        let xauReq = await fetch("https://api.exchangerate.host/latest?base=XAU&symbols=USD");
+        let xauJson = await xauReq.json();
+        let ounce = xauJson.rates.USD;  // قیمت 1 اونس طلا به دلار
+
+        // --- محاسبه قیمت نظری گرم 18 عیار ---
+        let theoretical = ((ounce * usd * 0.999) / 31.1035) * 0.75;
+
+        // --- محاسبه حباب ---
+        let bubble = goldMarket - theoretical;
+
+        // --- تشخیص خرید / فروش ---
+        let status = "";
+        if (bubble < 0) status = "<span class='buy'>💚 زمان خرید</span>";
+        else if (bubble > 0) status = "<span class='sell'>💔 زمان فروش</span>";
+        else status = "⚖ متعادل";
+
+        // --- نمایش خروجی ---
+        out.innerHTML = `
+            💵 دلار: ${usd.toLocaleString()} تومان<br>
+            🟡 اونس جهانی: ${ounce.toLocaleString()} دلار<br>
+            🟨 طلا ۱۸ عیار بازار: ${goldMarket.toLocaleString()} تومان<br><br>
+
+            📘 قیمت نظری: ${theoretical.toLocaleString()} تومان<br>
+            📙 مقدار حباب: ${bubble.toLocaleString()} تومان<br><br>
+
+            نتیجه: ${status}
+        `;
+
+    } catch (err) {
+        out.innerHTML = "❌ خطا در دریافت داده‌ها: " + err;
+    }
+}
+</script>
+
+</body>
+</html>
