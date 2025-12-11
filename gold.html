@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>محاسبه‌گر حباب طلای ۱۸ عیار (نسخه آفلاین)</title>
+<style>
+body { font-family: Tahoma; direction: rtl; padding: 20px; background: #f5f5f5; }
+input { padding: 8px; width: 200px; font-size: 16px; margin: 5px 0; }
+button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+.result { margin-top: 20px; font-size: 18px; font-weight: bold; }
+.buy { color: green; }
+.sell { color: red; }
+</style>
+</head>
+<body>
+
+<h2>محاسبه‌گر حباب طلای ۱۸ عیار — نسخه آفلاین</h2>
+
+<label>💵 قیمت دلار (تومان):</label><br>
+<input id="usd" type="number" placeholder="مثال: 124870"><br>
+
+<label>🟡 قیمت اونس جهانی (دلار):</label><br>
+<input id="ounce" type="number" placeholder="مثال: 4214"><br>
+
+<label>🟨 قیمت بازار طلا ۱۸ عیار (تومان):</label><br>
+<input id="gold" type="number" placeholder="مثال: 12679000"><br>
+
+<button onclick="calc()">محاسبه</button>
+
+<div id="out" class="result"></div>
+
+<script>
+function calc() {
+    let usd = parseFloat(document.getElementById("usd").value);
+    let ounce = parseFloat(document.getElementById("ounce").value);
+    let goldMarket = parseFloat(document.getElementById("gold").value);
+    let out = document.getElementById("out");
+
+    if (!usd || !ounce || !goldMarket) {
+        out.innerHTML = "❌ لطفاً همه مقادیر را وارد کنید.";
+        return;
+    }
+
+    // قیمت نظری گرم 18 عیار
+    let theoretical = ((ounce * usd * 0.999) / 31.1035) * 0.75;
+
+    // حباب
+    let bubble = goldMarket - theoretical;
+
+    // تشخیص
+    let status = "";
+    if (bubble < 0) status = "<span class='buy'>💚 زمان خرید</span>";
+    else if (bubble > 0) status = "<span class='sell'>💔 زمان فروش</span>";
+    else status = "⚖ متعادل";
+
+    out.innerHTML = `
+        📘 قیمت نظری: ${Math.round(theoretical).toLocaleString()} تومان<br>
+        📙 مقدار حباب: ${Math.round(bubble).toLocaleString()} تومان<br><br>
+        نتیجه: ${status}
+    `;
+}
+</script>
+
+</body>
+</html>
