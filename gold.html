@@ -1,148 +1,79 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ابزار حرفه‌ای نوسان‌گیری طلا</title>
-<style>
-    body {
-        font-family: sans-serif;
-        background: linear-gradient(135deg, #1b1b1b, #3a3a3a);
-        color: #fff;
-        margin: 0;
-        padding: 0;
-    }
-    .container {
-        max-width: 900px;
-        margin: auto;
-        padding: 20px;
-    }
-    h1, h2 {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #ffd369;
-    }
-    .card {
-        background: #2b2b2b;
-        border-radius: 18px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 0 20px rgba(255, 211, 105, 0.2);
-    }
-    label {
-        display: block;
-        margin: 8px 0 4px;
-    }
-    input {
-        width: 100%;
-        padding: 10px;
-        border-radius: 10px;
-        border: none;
-        margin-bottom: 12px;
-    }
-    button {
-        width: 100%;
-        padding: 12px;
-        background: #ffd369;
-        border: none;
-        border-radius: 12px;
-        color: #000;
-        font-size: 1.1rem;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-    button:hover {
-        background: #ffb954;
-    }
-    .result {
-        background: #1f1f1f;
-        padding: 15px;
-        border-radius: 12px;
-        margin-top: 15px;
-        font-size: 1.1rem;
-        line-height: 1.8;
-        border: 1px solid #ffd36944;
-    }
-    .tip {
-        color: #9bd7ff;
-        font-size: 0.95rem;
-        line-height: 1.9;
-    }
-</style>
-</head>
-<body>
-<div class="container">
-    <h1>ابزار حرفه‌ای محاسبه قیمت و نوسان‌گیری طلا</h1>
-
-    <div class="card">
-        <h2>محاسبه‌گر قیمت لحظه‌ای طلا</h2>
-        <label>قیمت انس جهانی (دلار):</label>
-        <input type="number" id="ounce" />
-
-        <label>قیمت دلار (تومان):</label>
-        <input type="number" id="usd" />
-
-        <label>اجرت + مالیات + سود (درصد):</label>
-        <input type="number" id="fee" />
-
-        <button onclick="calcGold()">محاسبه قیمت طلا</button>
-
-        <div id="goldResult" class="result"></div>
-    </div>
-
-    <div class="card">
-        <h2>بخش حرفه‌ای نوسان‌گیری</h2>
-        <p class="tip">
-            نکات مهم نوسان‌گیری:
-            <br>• بهترین زمان چک‌کردن قیمت: ساعت‌ ۱۰:۳۰ تا ۱۲ ظهر و ۱۸ تا ۲۲ شب.
-            <br>• زمان ورود خوب: وقتی دلار و انس هر دو در کف ۳ ساعته یا ۶ ساعته باشند.
-            <br>• زمان خروج: وقتی هر دو وارد فاز مثبت شدید می‌شوند یا RSI بازار بالای ۷۰ رود.
-            <br>• همیشه ۲ درصد بالا یا پایین حد ضرر بگذارید.
-        </p>
-
-        <label>روند دلار (مثبت/منفی):</label>
-        <input type="text" id="usdTrend" />
-
-        <label>روند انس جهانی (مثبت/منفی):</label>
-        <input type="text" id="ounceTrend" />
-
-        <button onclick="signal()">دریافت سیگنال خرید/فروش</button>
-
-        <div id="signalResult" class="result"></div>
-    </div>
+<div class="signal-box" id="signalBox">
+    📡 در حال تحلیل نوسان…
 </div>
 
-<script>
-function calcGold() {
-    const ounce = parseFloat(document.getElementById('ounce').value);
-    const usd = parseFloat(document.getElementById('usd').value);
-    const fee = parseFloat(document.getElementById('fee').value);
+<canvas id="trendChart" style="margin-top:20px; width:100%; height:150px;"></canvas>
 
-    if (!ounce || !usd) {
-        document.getElementById('goldResult').innerHTML = 'لطفاً تمام مقادیر را وارد کنید.';
+<style>
+.signal-box {
+    margin-top:20px; 
+    padding:20px; 
+    background: linear-gradient(145deg, #eef4ff, #d6e0ff);
+    border-right:6px solid #4d7bff; 
+    border-radius:12px; 
+    font-size:18px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.4s ease;
+    text-align: center;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('trendChart').getContext('2d');
+let trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'حباب قیمت',
+            data: [],
+            borderColor: '#4d7bff',
+            backgroundColor: 'rgba(77,123,255,0.2)',
+            tension: 0.3,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: { y: { beginAtZero: false } }
+    }
+});
+
+function updateSignal(bubbleHistory) {
+    let box = document.getElementById("signalBox");
+
+    if (bubbleHistory.length < 3) {
+        box.innerHTML = "📡 در انتظار داده بیشتر برای تحلیل نوسان…";
+        box.style.borderRightColor = "#4d7bff";
         return;
     }
 
-    const pureGram = (ounce * usd) / 31.1035;
-    const finalPrice = pureGram * (1 + fee / 100);
+    let last = bubbleHistory[bubbleHistory.length - 1];
+    let prev = bubbleHistory[bubbleHistory.length - 2];
+    let before = bubbleHistory[bubbleHistory.length - 3];
 
-    document.getElementById('goldResult').innerHTML =
-        `قیمت هر گرم طلای ۱۸ عیار: <strong>${(finalPrice * 0.75).toLocaleString()} تومان</strong><br>
-         قیمت هر گرم طلای ۲۴ عیار: <strong>${finalPrice.toLocaleString()} تومان</strong>`;
-}
+    let upTrend = last > prev && prev > before;
+    let downTrend = last < prev && prev < before;
 
-function signal() {
-    const usdT = document.getElementById('usdTrend').value.trim();
-    const ounceT = document.getElementById('ounceTrend').value.trim();
+    if (last < -20000 && upTrend) {
+        box.innerHTML = "🟢 <b>سیگنال خرید</b><br>حباب منفی و روند صعودی";
+        box.style.borderRightColor = "green";
+    } else if (last > 20000 && downTrend) {
+        box.innerHTML = "🔴 <b>سیگنال فروش</b><br>حباب مثبت و روند نزولی";
+        box.style.borderRightColor = "red";
+    } else if (Math.abs(last) < 15000) {
+        box.innerHTML = "⚖ <b>منطقه خنثی</b><br>معامله نکن، بازار نامشخص";
+        box.style.borderRightColor = "#bbb";
+    } else {
+        box.innerHTML = "📡 <b>در حال بررسی…</b>";
+        box.style.borderRightColor = "#4d7bff";
+    }
 
-    let result = '';
-
-    if (usdT === 'منفی' && ounceT === 'منفی') result = 'سیگنال خرید قوی — بهترین زمان ورود.';
-    else if (usdT === 'مثبت' && ounceT === 'مثبت') result = 'سیگنال فروش — بازار داغ است، سود را ذخیره کن.';
-    else result = 'بازار خنثی — فعلاً تماشا کن.';
-
-    document.getElementById('signalResult').innerHTML = result;
+    // نمودار را به‌روزرسانی کن
+    trendChart.data.labels = bubbleHistory.map((_, i) => i+1);
+    trendChart.data.datasets[0].data = bubbleHistory;
+    trendChart.update();
 }
 </script>
-</body>
-</html>
