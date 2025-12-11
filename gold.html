@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>داشبورد حرفه‌ای نوسان‌گیری طلای ۱۸ عیار</title>
+<title>داشبورد حرفه‌ای طلای ۱۸ عیار</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{font-family:sans-serif;background:linear-gradient(135deg,#1b1b1b,#3a3a3a);color:#fff;margin:0;padding:10px}
@@ -24,30 +24,33 @@ canvas{border-radius:10px}
 </head>
 <body>
 <div class="container">
-<h1>داشبورد حرفه‌ای نوسان‌گیری طلای ۱۸ عیار</h1>
+<h1>داشبورد حرفه‌ای طلای ۱۸ عیار</h1>
 
 <div class="card">
 <h2>توضیحات استفاده</h2>
 <p class="tip">
-1. داده‌ها از API دریافت می‌شوند و محاسبه خودکار حباب، حمایت، مقاومت و RSI انجام می‌شود.<br>
-2. سیگنال ورود: حباب منفی + نزدیک حمایت<br>
-3. سیگنال خروج: حباب مثبت + نزدیک مقاومت<br>
-4. بهترین ساعات نوسان‌گیری: <strong>10:30 تا 12:00 ظهر و 18:00 تا 22:00 شب</strong><br>
-5. نمودار حباب، حمایت/مقاومت و RSI شبیه TradingView است.
+• داده‌ها هم دستی وارد می‌شوند هم از API دریافت می‌شوند.<br>
+• سیگنال ورود: حباب منفی + نزدیک حمایت<br>
+• سیگنال خروج: حباب مثبت + نزدیک مقاومت<br>
+• بهترین ساعات نوسان‌گیری: 10:30 تا 12:00 ظهر و 18:00 تا 22:00 شب.<br>
+• نمودار حباب، حمایت/مقاومت و RSI شبیه TradingView است.
 </p>
 </div>
 
 <div class="card">
-<h2>دریافت داده از API</h2>
-<button onclick="fetchFromAPI()">📡 دریافت قیمت لحظه‌ای از API</button>
+<h2>ورودی قیمت دستی / دریافت API</h2>
+<label>قیمت طلای ۱۸ عیار (تومان):</label><input type="number" id="gold18" placeholder="مثال: 12679000">
+<label>قیمت دلار (تومان):</label><input type="number" id="usd">
+<label>قیمت انس جهانی (دلار):</label><input type="number" id="ounce">
+<label>اجرت + مالیات + سود (%) :</label><input type="number" id="fee">
+<button onclick="addData()">ثبت داده</button>
+<button onclick="fetchFromAPI()">📡 دریافت از API</button>
 <p class="tip">تعداد درخواست API امروز: <span id="apiCounter">0</span>/100</p>
-<label>اجرت + مالیات + سود (درصد) - اختیاری:</label>
-<input type="number" id="fee">
 <div id="goldResult" class="result"></div>
 </div>
 
 <div class="card">
-<h2>سیگنال حرفه‌ای، نمودار حباب و RSI</h2>
+<h2>سیگنال حرفه‌ای و نمودار</h2>
 <button onclick="signal()">دریافت سیگنال حرفه‌ای</button>
 <div id="signalResult" class="result"></div>
 <canvas id="trendChart" style="margin-top:10px;width:100%;height:300px;"></canvas>
@@ -57,18 +60,18 @@ canvas{border-radius:10px}
 
 <script>
 // شمارنده API
-let apiCounter = parseInt(localStorage.getItem('apiCounter')) || 0;
-document.getElementById('apiCounter').innerText = apiCounter;
+let apiCounter=parseInt(localStorage.getItem('apiCounter'))||0;
+document.getElementById('apiCounter').innerText=apiCounter;
 
 // وضعیت نوتیفیکیشن
-let notifyActive = false;
+let notifyActive=false;
 
 // داده‌ها
-let historyData = JSON.parse(localStorage.getItem('goldHistory')) || [];
+let historyData=JSON.parse(localStorage.getItem('goldHistory'))||[];
 
 // نمودار
-const ctx = document.getElementById('trendChart').getContext('2d');
-let trendChart = new Chart(ctx,{
+const ctx=document.getElementById('trendChart').getContext('2d');
+let trendChart=new Chart(ctx,{
     type:'line',
     data:{
         labels:[],
@@ -114,41 +117,23 @@ function notify(message){
     }
 }
 
-// دریافت داده از API و محاسبه روند خودکار
-async function fetchFromAPI(){
-    if(apiCounter>=100){
-        document.getElementById('goldResult').innerHTML="⚠ سقف 100 درخواست API امروز رسید!";
-        return;
-    }
-    const url="https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU";
-    try{
-        let res=await fetch(url);
-        let json=await res.json();
-        const gold18=json.gold.find(item=>item.symbol==="IR_GOLD_18K").price;
-        const ounce=json.gold.find(item=>item.symbol==="XAUUSD").price;
-        const usd=json.currency.find(item=>item.symbol==="USD").price;
-
-        // محاسبه روند خودکار مثبت/منفی
-        let lastUSD=historyData.length>0?historyData[historyData.length-1].usd:usd;
-        let lastOunce=historyData.length>0?historyData[historyData.length-1].ounce:ounce;
-        const usdTrend=usd>lastUSD?'مثبت':'منفی';
-        const ounceTrend=ounce>lastOunce?'مثبت':'منفی';
-
-        // افزودن داده و محاسبه حباب/RSI
-        const fee=parseFloat(document.getElementById('fee').value)||0;
-        const finalPrice=((ounce*usd)/31.1035)*(1+fee/100);
-        const averagePrice=computeAverage(historyData,finalPrice);
-        const bubble=finalPrice-averagePrice;
-        const rsi=computeRSI([...historyData.map(d=>d.price),finalPrice],14);
-        historyData.push({price:finalPrice,avg:averagePrice,bubble:bubble,rsi:rsi,usd:usd,ounce:ounce,usdTrend:usdTrend,ounceTrend:ounceTrend});
-        localStorage.setItem('goldHistory',JSON.stringify(historyData));
-        updateChart();
-
-        apiCounter++;
-        localStorage.setItem('apiCounter',apiCounter);
-        document.getElementById('apiCounter').innerText=apiCounter;
-        document.getElementById('goldResult').innerHTML=`📡 قیمت‌ها از API دریافت شد. حباب: ${bubble.toLocaleString()} تومان | RSI: ${rsi.toFixed(2)} | روند دلار: ${usdTrend} | انس: ${ounceTrend}`;
-    }catch(err){console.error(err);document.getElementById('goldResult').innerHTML="❌ خطا در دریافت داده از API";}
+// افزودن داده (دستی یا API)
+function addData(){
+    const gold=parseFloat(document.getElementById('gold18').value);
+    const usd=parseFloat(document.getElementById('usd').value);
+    const ounce=parseFloat(document.getElementById('ounce').value);
+    const fee=parseFloat(document.getElementById('fee').value)||0;
+    if(!gold){document.getElementById('goldResult').innerHTML='لطفاً قیمت طلای ۱۸ عیار را وارد کنید.';return;}
+    const finalPrice=((ounce*usd)/31.1035)*(1+fee/100)||gold;
+    const averagePrice=computeAverage(historyData,finalPrice);
+    const bubble=finalPrice-averagePrice;
+    const rsi=computeRSI([...historyData.map(d=>d.price),finalPrice],14);
+    let usdTrend='—',ounceTrend='—';
+    if(historyData.length>0){usdTrend=usd>historyData[historyData.length-1].usd?'مثبت':'منفی';ounceTrend=ounce>historyData[historyData.length-1].ounce?'مثبت':'منفی';}
+    historyData.push({price:finalPrice,avg:averagePrice,bubble:bubble,rsi:rsi,usd:usd,ounce:ounce,usdTrend:usdTrend,ounceTrend:ounceTrend});
+    localStorage.setItem('goldHistory',JSON.stringify(historyData));
+    updateChart();
+    document.getElementById('goldResult').innerHTML=`ثبت شد: ${finalPrice.toLocaleString()} تومان | حباب: ${bubble.toLocaleString()} | RSI: ${rsi.toFixed(2)}`;
 }
 
 // میانگین ۵ روز اخیر
@@ -156,8 +141,7 @@ function computeAverage(data,newPrice){
     const days=5;
     const recent=data.slice(-days).map(d=>d.price);
     recent.push(newPrice);
-    const sum=recent.reduce((a,b)=>a+b,0);
-    return sum/recent.length;
+    return recent.reduce((a,b)=>a+b,0)/recent.length;
 }
 
 // محاسبه RSI
@@ -166,35 +150,50 @@ function computeRSI(prices,period){
     let gains=0,losses=0;
     for(let i=1;i<=period;i++){
         const diff=prices[prices.length-i]-prices[prices.length-i-1];
-        if(diff>0) gains+=diff;
-        else losses-=diff;
+        if(diff>0) gains+=diff; else losses-=diff;
     }
     if(losses===0) return 100;
     const rs=gains/losses;
     return 100-(100/(1+rs));
 }
 
-// سیگنال حرفه‌ای
+// سیگنال حرفه‌ای و نقاط ورود/خروج روی نمودار
 function signal(){
     if(historyData.length===0){document.getElementById('signalResult').innerHTML='داده‌ای ثبت نشده';return;}
     const last=historyData[historyData.length-1];
-    let support=last.avg*0.985;
-    let resistance=last.avg*1.015;
+    const support=last.avg*0.985;
+    const resistance=last.avg*1.015;
     let result='';
     if(last.bubble<-20000 && last.price<=support){
-        result=`🟢 سیگنال ورود قوی — قیمت نزدیک حمایت: ${support.toLocaleString()}`;
+        result=`🟢 سیگنال ورود قوی — نزدیک حمایت: ${support.toLocaleString()}`;
         playSound(); notify(result);
+        trendChart.data.datasets[0].pointBackgroundColor=historyData.map(d=>d===last?'green':'#4d7bff');
     } else if(last.bubble>20000 && last.price>=resistance){
-        result=`🔴 سیگنال خروج قوی — قیمت نزدیک مقاومت: ${resistance.toLocaleString()}`;
+        result=`🔴 سیگنال خروج قوی — نزدیک مقاومت: ${resistance.toLocaleString()}`;
         playSound(); notify(result);
+        trendChart.data.datasets[0].pointBackgroundColor=historyData.map(d=>d===last?'red':'#4d7bff');
     } else{
-        const usdTrend=last.usdTrend;
-        const ounceTrend=last.ounceTrend;
-        if(usdTrend==='منفی' && ounceTrend==='منفی') result='🟢 سیگنال خرید — بهترین زمان ورود';
-        else if(usdTrend==='مثبت' && ounceTrend==='مثبت') result='🔴 سیگنال فروش — بازار داغ است';
-        else result=`⚖ بازار خنثی — حباب: ${last.bubble.toLocaleString()} تومان | RSI: ${last.rsi.toFixed(2)}`;
+        result=`⚖ بازار خنثی — حباب: ${last.bubble.toLocaleString()} | RSI: ${last.rsi.toFixed(2)}`;
+        trendChart.data.datasets[0].pointBackgroundColor='#4d7bff';
     }
     document.getElementById('signalResult').innerHTML=result;
+    trendChart.update();
+}
+
+// دریافت داده از API
+async function fetchFromAPI(){
+    if(apiCounter>=100){document.getElementById('goldResult').innerHTML="⚠ سقف 100 درخواست API امروز رسید!";return;}
+    const url="https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU";
+    try{
+        let res=await fetch(url);
+        let json=await res.json();
+        document.getElementById('gold18').value=json.gold.find(i=>i.symbol==="IR_GOLD_18K").price;
+        document.getElementById('usd').value=json.currency.find(i=>i.symbol==="USD").price;
+        document.getElementById('ounce').value=json.gold.find(i=>i.symbol==="XAUUSD").price;
+        apiCounter++;localStorage.setItem('apiCounter',apiCounter);
+        document.getElementById('apiCounter').innerText=apiCounter;
+        addData();
+    }catch(err){console.error(err);document.getElementById('goldResult').innerHTML="❌ خطا در دریافت داده از API";}
 }
 
 // بروزرسانی نمودار
