@@ -3,188 +3,154 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>داشبورد نهایی طلای ۱۸ عیار — حرفه‌ای (با AutoFetch و Alerts)</title>
+<title>داشبورد نهایی طلای ۱۸ عیار — نمونه تست</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg1:#0f1720;--card:#1f2937;--accent:#ffd369;--muted:#9bd7ff}
-*{box-sizing:border-box}
-body{margin:0;padding:14px;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg1),#0b1116);color:#fff}
+body{margin:0;padding:14px;font-family:system-ui,sans-serif;background:#0f1720;color:#fff}
 .container{max-width:980px;margin:0 auto}
-.header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
-.title{font-size:1.25rem;color:var(--accent);font-weight:700}
-.small{font-size:0.85rem;color:#cbd5e1}
-.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 6px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,211,105,0.06)}
-.row{display:flex;gap:10px;align-items:center}
+.card{background:#1f2937;border-radius:12px;padding:14px;margin-bottom:12px}
+.title{font-size:1.25rem;color:#ffd369;font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 @media(max-width:740px){.grid{grid-template-columns:1fr}}
-label{display:block;font-size:0.85rem;margin-bottom:6px;color:#d1d5db}
-input[type=number],input[type=text]{width:100%;padding:8px;border-radius:8px;border:none;background:#0b1220;color:#fff}
-button{padding:9px 12px;border-radius:10px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer}
-.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff}
-.result{background:#071018;padding:10px;border-radius:8px;margin-top:8px;border:1px solid rgba(255,255,255,0.03);font-size:0.95rem}
-.kv{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:0.95rem}
-.tip{color:var(--muted);font-size:0.88rem;line-height:1.45}
-.footer-small{font-size:0.82rem;color:#94a3b8;margin-top:8px}
-.toggle{display:inline-block;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:700}
-.toggle.on{background:#16a34a;color:#fff}
-.toggle.off{background:#ef4444;color:#fff}
-.signals-list{max-height:160px;overflow:auto;margin-top:8px;border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.03);background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
-.signal-item{padding:6px;border-bottom:1px dashed rgba(255,255,255,0.03);font-size:0.9rem}
+input,button{padding:8px;border-radius:8px;border:none}
+button{background:#ffd369;color:#000;cursor:pointer}
+.result{background:#071018;padding:10px;border-radius:8px;margin-top:8px}
+.kv{display:flex;justify-content:space-between;padding:6px 0;font-size:0.95rem}
 .canvas-wrap{background:#06121a;padding:8px;border-radius:10px;margin-top:8px}
 .legend{display:flex;gap:8px;align-items:center;margin-top:8px}
-.legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block}
 .entry-dot{background:#16a34a}
 .exit-dot{background:#ef4444}
-.hr{height:1px;background:rgba(255,255,255,0.03);margin:12px 0;border-radius:2px}
-.small-muted{color:#94a3b8;font-size:0.85rem}
-.input-inline{display:flex;gap:8px}
-.status-badge{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:700}
-.status-normal{background:#374151;color:#fff}
-.status-high{background:#065f46;color:#fff}
-.status-low{background:#7f1d1d;color:#fff}
-.counter-box{display:flex;gap:12px;align-items:center}
-.counter-box div{min-width:120px}
+.signals-list{max-height:160px;overflow:auto;margin-top:8px;border-radius:8px;padding:8px;background:#0b1116}
+.signal-item{padding:6px;border-bottom:1px dashed rgba(255,255,255,0.03)}
 </style>
 </head>
 <body>
 <div class="container">
-<!-- همان محتوای UI شما که شامل header، توضیحات، ورودی‌ها، AutoFetch و نمودار و سیگنال است -->
-<!-- تغییرات AutoFetch و شمارش دقیق بین درخواست‌ها در جاوااسکریپت اعمال شده است -->
+  <div class="card">
+    <div class="title">داشبورد نمونه طلای ۱۸ عیار</div>
+  </div>
+
+  <div class="card">
+    <h3>ورودی دستی</h3>
+    <div class="grid">
+      <div>
+        <label>قیمت طلای ۱۸ عیار (تومان)</label>
+        <input id="gold18" type="number" placeholder="12679000">
+      </div>
+      <div>
+        <label>اجرت + مالیات + سود (%)</label>
+        <input id="fee" type="number" placeholder="1.2">
+      </div>
+    </div>
+    <button onclick="addData()">ثبت داده</button>
+    <div class="result" id="goldResult">وضعیت: آماده</div>
+  </div>
+
+  <div class="card">
+    <h3>نمودار و سیگنال‌ها</h3>
+    <div class="canvas-wrap">
+      <canvas id="trendChart" style="width:100%;height:300px"></canvas>
+    </div>
+    <div class="legend">
+      <div class="dot entry-dot"></div><div>ورود</div>
+      <div class="dot exit-dot"></div><div>خروج</div>
+    </div>
+    <div class="signals-list" id="signalsList"></div>
+  </div>
 </div>
 
 <script>
-// -------------------------
-// تنظیم اولیه و متغیرها
-// -------------------------
-const BRS_URL = "https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU";
-let apiCounter = parseInt(localStorage.getItem('apiCounter')) || 0;
-let historyData = JSON.parse(localStorage.getItem('goldHistory')) || [];
-let signals = JSON.parse(localStorage.getItem('signals')) || [];
-let notifyActive = (localStorage.getItem('notifyActive') === '1');
-if(notifyActive){ document.getElementById('notifyBtn').className='toggle on'; document.getElementById('notifyBtn').innerText='🔔 نوتیفیکیشن روشن'; }
-document.getElementById('apiCounter').innerText = apiCounter;
+let historyData = [];
+let signals = [];
 
-// AutoFetch state
-let autoState = { running:false, timerId:null, countdownId:null, nextAt: null, done:0, left:0 };
-
-// -------------------------
-// Chart.js setup
-// -------------------------
-// همان تنظیمات قبلی نمودار شما
-
-// -------------------------
-// توابع کمکی، ثبت دستی و API
-// -------------------------
-// همان توابع addData, fetchFromAPI, editLastAPI, saveRSIKey, computeRSI, computeAverage, pushSignal, renderSignals, updateChart, autoSignalCheck, signal, checkLimitsAndAlert
-
-// -------------------------
-// AutoFetch اصلاح‌شده و حرفه‌ای
-// -------------------------
-function startAutoFetch(){
-  if(autoState.running){ alert('AutoFetch در حال اجراست'); return; }
-  const maxReq = parseInt(document.getElementById('maxRequests').value) || 100;
-  if(maxReq < 1 || maxReq > 1500){ alert('حداکثر باید بین 1 و 1500 باشد'); return; }
-
-  const windowSeconds = (22 - 18) * 3600;
-  let remainingRequests = Math.max(0, maxReq - apiCounter);
-  if(remainingRequests === 0){
-    document.getElementById('goldResult').innerText = `⚠ سقف ${maxReq} درخواست API امروز رسید!`;
-    return;
-  }
-  let intervalSec = Math.floor(windowSeconds / remainingRequests);
-  if(intervalSec < 3) intervalSec = 3;
-
-  autoState.running = true;
-  autoState.done = 0;
-  autoState.left = remainingRequests;
-  document.getElementById('doneCount').innerText = autoState.done;
-  document.getElementById('leftCount').innerText = autoState.left;
-
-  function scheduleNext(){
-    const now = new Date();
-    const hour = now.getHours();
-    let nextDelay = 0;
-
-    if(hour >= 18 && hour < 22){ nextDelay = 0; }
-    else {
-      const nextStart = new Date(now);
-      nextStart.setHours(18,0,0,0);
-      if(now >= nextStart) nextStart.setDate(nextStart.getDate() + 1);
-      nextDelay = Math.floor((nextStart - now)/1000);
+const ctx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(ctx,{
+  type:'line',
+  data:{
+    labels:[],
+    datasets:[
+      {label:'حباب قیمت',data:[],borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.15)',tension:0.3,fill:true,pointRadius:5,pointBackgroundColor:[]},
+      {label:'حمایت',data:[],borderColor:'#10b981',borderDash:[6,4],fill:false,pointRadius:0},
+      {label:'مقاومت',data:[],borderColor:'#ef4444',borderDash:[6,4],fill:false,pointRadius:0},
+      {label:'RSI',data:[],borderColor:'#f472b6',fill:false,yAxisID:'rsiAxis',pointRadius:2}
+    ]
+  },
+  options:{
+    responsive:true,
+    scales:{
+      y:{position:'left',title:{display:true,text:'تومان / حباب'}},
+      rsiAxis:{position:'right',min:0,max:100,title:{display:true,text:'RSI'}}
     }
-
-    if(nextDelay > 0){
-      document.getElementById('nextIn').innerText = nextDelay;
-      autoState.countdownId = setInterval(()=>{
-        nextDelay -= 1;
-        document.getElementById('nextIn').innerText = nextDelay;
-        if(nextDelay <= 0){
-          clearInterval(autoState.countdownId);
-          beginLoop();
-        }
-      },1000);
-    } else { beginLoop(); }
   }
+});
 
-  function beginLoop(){
-    autoState.nextAt = Date.now() + intervalSec*1000;
-    autoState.timerId = setInterval(async ()=>{
-      const now = new Date();
-      const hour = now.getHours();
-      if(hour >= 18 && hour < 22){
-        if(apiCounter >= maxReq){ stopAutoFetch(); return; }
-        await fetchFromAPI();
-        autoState.done += 1;
-        autoState.left = Math.max(0, maxReq - apiCounter);
-        document.getElementById('doneCount').innerText = autoState.done;
-        document.getElementById('leftCount').innerText = autoState.left;
-        autoState.nextAt = Date.now() + intervalSec*1000;
-      } else { stopAutoFetch(); }
-    }, intervalSec * 1000);
+function saveSignals(){ localStorage.setItem('signals',JSON.stringify(signals)); }
+function renderSignals(){
+  const el = document.getElementById('signalsList'); el.innerHTML='';
+  if(signals.length===0){ el.innerHTML='<div>هنوز سیگنالی صادر نشده است</div>'; return; }
+  signals.forEach(s=>{
+    const div = document.createElement('div');
+    div.className='signal-item';
+    div.innerHTML=`<strong>[${s.type}]</strong> ${s.text}`;
+    el.appendChild(div);
+  });
+}
 
-    autoState.countdownId = setInterval(()=>{
-      if(!autoState.nextAt) return;
-      const s = Math.max(0, Math.ceil((autoState.nextAt - Date.now())/1000));
-      document.getElementById('nextIn').innerText = s;
-    }, 500);
+function computeAverage(data,newPrice){
+  const days=5;
+  const recent=data.slice(-days).map(d=>d.price); recent.push(newPrice);
+  return recent.reduce((a,b)=>a+b,0)/recent.length;
+}
+
+function computeRSI(prices,period=14){
+  if(prices.length<period+1)return 50;
+  let gains=0,losses=0;
+  for(let i=prices.length-period;i<prices.length;i++){
+    const diff=prices[i]-prices[i-1];
+    if(diff>0) gains+=diff; else losses+=Math.abs(diff);
   }
-
-  scheduleNext();
-  document.getElementById('goldResult').innerText = 'AutoFetch برنامه‌ریزی شد؛ منتظر شروع یا اجرای آن باشید.';
+  if(losses===0) return 100;
+  const rs=gains/losses;
+  return 100-(100/(1+rs));
 }
 
-function stopAutoFetch(){
-  if(autoState.timerId) clearInterval(autoState.timerId);
-  if(autoState.countdownId) clearInterval(autoState.countdownId);
-  autoState = { running:false, timerId:null, countdownId:null, nextAt: null, done:0, left:0 };
-  document.getElementById('nextIn').innerText = '—';
-  document.getElementById('doneCount').innerText = '0';
-  document.getElementById('leftCount').innerText = '0';
-  document.getElementById('goldResult').innerText = 'AutoFetch متوقف شد.';
+function updateChart(){
+  trendChart.data.labels=historyData.map((_,i)=>i+1);
+  trendChart.data.datasets[0].data=historyData.map(d=>d.bubble);
+  trendChart.data.datasets[1].data=historyData.map(d=>d.avg*0.985);
+  trendChart.data.datasets[2].data=historyData.map(d=>d.avg*1.015);
+  trendChart.data.datasets[3].data=historyData.map(d=>d.rsi);
+  trendChart.data.datasets[0].pointBackgroundColor=historyData.map(d=>d.signal==='entry'?'#16a34a':d.signal==='exit'?'#ef4444':'#60a5fa');
+  trendChart.update();
 }
 
-// -------------------------
-// وضعیت نوتیفیکیشن
-// -------------------------
-function toggleNotification(){
-  notifyActive = !notifyActive;
-  localStorage.setItem('notifyActive', notifyActive ? '1' : '0');
-  const btn = document.getElementById('notifyBtn');
-  if(notifyActive){ btn.className = 'toggle on'; btn.innerText = '🔔 نوتیفیکیشن روشن'; }
-  else { btn.className = 'toggle off'; btn.innerText = '🔔 نوتیفیکیشن خاموش'; }
+function pushSignal(type,text){ signals.unshift({type,text}); if(signals.length>50)signals=signals.slice(0,50); saveSignals(); renderSignals(); }
+
+function addData(){
+  const gold=parseFloat(document.getElementById('gold18').value);
+  const fee=parseFloat(document.getElementById('fee').value)||0;
+  if(!gold){ document.getElementById('goldResult').innerText='قیمت را وارد کنید'; return; }
+  const finalPrice=gold*(1+fee/100);
+  const avg=computeAverage(historyData,finalPrice);
+  const bubble=finalPrice-avg;
+  const prices=[...historyData.map(d=>d.price),finalPrice];
+  const rsi=computeRSI(prices,14);
+  const obj={price:finalPrice,avg,bubble,rsi,signal:null};
+  if(bubble<-20000){ obj.signal='entry'; pushSignal('ورود',`سیگنال ورود قوی — قیمت: ${finalPrice}`);}
+  else if(bubble>20000){ obj.signal='exit'; pushSignal('خروج',`سیگنال خروج قوی — قیمت: ${finalPrice}`);}
+  historyData.push(obj); updateChart();
+  document.getElementById('goldResult').innerText=`ثبت شد: ${finalPrice.toLocaleString()} | حباب: ${bubble.toLocaleString()} | RSI: ${rsi.toFixed(2)}`;
 }
 
-// -------------------------
-// بارگذاری اولیه نمودار و سیگنال‌ها
-// -------------------------
-function init(){ updateChart(); renderSignals(); document.getElementById('apiCounter').innerText = apiCounter; document.getElementById('leftCount').innerText = 0; }
-init();
-
-// -------------------------
-// ریست و پاکسازی
-// -------------------------
-window.resetApiCounter = function(){ if(confirm('آیا شمارنده API را ریست می‌کنید؟')){ apiCounter=0; localStorage.setItem('apiCounter','0'); document.getElementById('apiCounter').innerText='0'; alert('شمارنده ریست شد.'); } };
-window.clearAllData = function(){ if(confirm('همه داده‌ها پاک شوند؟')){ historyData=[]; signals=[]; saveHistory(); saveSignals(); updateChart(); renderSignals(); document.getElementById('goldResult').innerText='همه داده‌ها پاک شد.'; } };
+// داده نمونه اولیه
+(function initSample(){
+  historyData.push({price:13000000,avg:12950000,bubble:50000,rsi:55,signal:'entry'});
+  historyData.push({price:12800000,avg:12900000,bubble:-10000,rsi:45,signal:'exit'});
+  updateChart();
+  pushSignal('ورود','سیگنال نمونه ورود');
+  pushSignal('خروج','سیگنال نمونه خروج');
+})();
 </script>
 </body>
 </html>
