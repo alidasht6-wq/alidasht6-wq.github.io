@@ -2,34 +2,143 @@
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
-<title>محاسبه‌گر حباب طلای ۱۸ عیار (نسخه آفلاین)</title>
+<title>Gold Bubble PRO — محاسبه‌گر حرفه‌ای حباب طلا</title>
+
 <style>
-body { font-family: Tahoma; direction: rtl; padding: 20px; background: #f5f5f5; }
-input { padding: 8px; width: 200px; font-size: 16px; margin: 5px 0; }
-button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-top: 10px; }
-.result { margin-top: 20px; font-size: 18px; font-weight: bold; }
-.buy { color: green; }
-.sell { color: red; }
+body {
+    font-family: 'Tahoma';
+    direction: rtl;
+    background: linear-gradient(135deg, #ffd66e, #ffb84c);
+    padding: 30px;
+    margin: 0;
+}
+
+.wrapper {
+    width: 420px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.2);
+}
+
+.title {
+    font-size: 26px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+label {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 7px 0 15px 0;
+    border-radius: 12px;
+    border: 1px solid #888;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    background: #ff9800;
+    border: none;
+    color: white;
+    font-size: 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background: #e58900;
+}
+
+.result {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 15px;
+    background: #f8f8f8;
+    font-size: 17px;
+    line-height: 1.8;
+}
+
+.buy { color: green; font-weight: bold; }
+.sell { color: red; font-weight: bold; }
+.neutral { color: #333; font-weight: bold; }
+
+.tip-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fff5d1;
+    border-radius: 12px;
+    border-right: 6px solid #ffc000;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.chart-box {
+    margin-top: 25px;
+    background: #fff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: inset 0 0 10px #ddd;
+}
+
+#chart {
+    width: 100%;
+    height: 120px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    position: relative;
+}
 </style>
 </head>
 <body>
 
-<h2>محاسبه‌گر حباب طلای ۱۸ عیار — نسخه آفلاین</h2>
+<div class="wrapper">
 
-<label>💵 قیمت دلار (تومان):</label><br>
-<input id="usd" type="number" placeholder="مثال: 124870"><br>
+<div class="title">📊 Gold Bubble PRO</div>
 
-<label>🟡 قیمت اونس جهانی (دلار):</label><br>
-<input id="ounce" type="number" placeholder="مثال: 4214"><br>
+<label>💵 قیمت دلار (تومان):</label>
+<input id="usd" type="number" placeholder="مثال: 125000">
 
-<label>🟨 قیمت بازار طلا ۱۸ عیار (تومان):</label><br>
-<input id="gold" type="number" placeholder="مثال: 12679000"><br>
+<label>🟡 قیمت اونس جهانی (دلار):</label>
+<input id="ounce" type="number" placeholder="مثال: 4214">
 
-<button onclick="calc()">محاسبه</button>
+<label>🟨 قیمت طلا ۱۸ عیار (تومان):</label>
+<input id="gold" type="number" placeholder="مثال: 12679000">
 
-<div id="out" class="result"></div>
+<button onclick="calc()">🔎 محاسبه حرفه‌ای</button>
+
+<div id="out" class="result">نتیجه محاسبه اینجا نمایش داده می‌شود.</div>
+
+<div class="chart-box">
+    <div><b>نمودار کوچک تغییرات حباب (۱۰ محاسبه اخیر):</b></div>
+    <div id="chart"></div>
+</div>
+
+<div class="tip-box">
+    ⭐ <b>بهترین زمان محاسبه حباب طلا:</b><br>
+    ✔ **ساعت ۴ تا ۵:۳۰ عصر** (زمان بسته‌شدن بازار ایران)<br>
+    ✔ **ساعت ۹:۳۰ تا ۱۰ شب** (ثبات نسبی اونس جهانی)<br>
+    ✔ صبح‌ها نوسان زیاد است—نتیجه دقیق نیست<br>
+    ✔ در زمان اخبار آمریکا (NFP, CPI, FOMC) حباب دقت ندارد  
+</div>
+
+</div>
+
 
 <script>
+// ذخیره ۱۰ محاسبه برای نمودار
+let history = [];
+
 function calc() {
     let usd = parseFloat(document.getElementById("usd").value);
     let ounce = parseFloat(document.getElementById("ounce").value);
@@ -37,27 +146,52 @@ function calc() {
     let out = document.getElementById("out");
 
     if (!usd || !ounce || !goldMarket) {
-        out.innerHTML = "❌ لطفاً همه مقادیر را وارد کنید.";
+        out.innerHTML = "❌ لطفاً همه مقادیر را کامل وارد کنید.";
         return;
     }
 
-    // قیمت نظری گرم 18 عیار
     let theoretical = ((ounce * usd * 0.999) / 31.1035) * 0.75;
-
-    // حباب
     let bubble = goldMarket - theoretical;
 
-    // تشخیص
+    // تشخیص خرید یا فروش
     let status = "";
-    if (bubble < 0) status = "<span class='buy'>💚 زمان خرید</span>";
-    else if (bubble > 0) status = "<span class='sell'>💔 زمان فروش</span>";
-    else status = "⚖ متعادل";
+    if (bubble < -20000) status = "<span class='buy'>💚 زمان خرید (حباب منفی)</span>";
+    else if (bubble > 20000) status = "<span class='sell'>💔 زمان فروش (حباب مثبت)</span>";
+    else status = "<span class='neutral'>⚖ متعادل</span>";
 
     out.innerHTML = `
-        📘 قیمت نظری: ${Math.round(theoretical).toLocaleString()} تومان<br>
+        📘 قیمت نظری ۱۸ عیار: ${Math.round(theoretical).toLocaleString()} تومان<br>
         📙 مقدار حباب: ${Math.round(bubble).toLocaleString()} تومان<br><br>
         نتیجه: ${status}
     `;
+
+    // ذخیره داده‌ها برای نمودار
+    if (history.length >= 10) history.shift();
+    history.push(Math.round(bubble));
+
+    drawChart();
+}
+
+// رسم نمودار ساده
+function drawChart() {
+    let chart = document.getElementById("chart");
+    chart.innerHTML = "";
+
+    let max = Math.max(...history, 1);
+    let min = Math.min(...history, -1);
+
+    history.forEach(value => {
+        let bar = document.createElement("div");
+        bar.style.width = "8%";
+        bar.style.height = (Math.abs(value) / Math.max(Math.abs(max), Math.abs(min)) * 100) + "%";
+        bar.style.display = "inline-block";
+        bar.style.margin = "0 1%";
+        bar.style.verticalAlign = "bottom";
+        bar.style.borderRadius = "5px";
+
+        bar.style.background = value >= 0 ? "#ff4444" : "#00aa44";
+        chart.appendChild(bar);
+    });
 }
 </script>
 
