@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>داشبورد طلای ۱۸ عیار — RSI جدید</title>
+<title>داشبورد طلای ۱۸ عیار — RSI و قیمت</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg1:#0f1720;--card:#1f2937;--accent:#ffd369;--muted:#9bd7ff}
@@ -20,14 +20,13 @@ button{cursor:pointer;background:#ffd369;color:#000;font-weight:600}
 <body>
 <div class="container">
   <div class="card">
-    <h3>ورودی‌ها و API</h3>
-    <label>کلید RSI AlphaVantage</label>
+    <h3>کلید API RSI</h3>
     <input id="rsiApiKey" type="text" placeholder="ALPHAVANTAGE_KEY">
     <button onclick="saveRSIKey()">ذخیره کلید RSI</button>
   </div>
 
   <div class="card">
-    <h3>قیمت‌ها و ثبت</h3>
+    <h3>قیمت طلای ۱۸ عیار، دلار و انس</h3>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <input id="gold18" type="number" placeholder="طلای ۱۸ عیار (تومان)">
       <input id="usd" type="number" placeholder="دلار (تومان)">
@@ -35,12 +34,12 @@ button{cursor:pointer;background:#ffd369;color:#000;font-weight:600}
       <input id="fee" type="number" placeholder="اجرت+مالیات+سود %">
     </div>
     <button onclick="addData()">ثبت داده</button>
-    <button onclick="fetchFromAPI()">📡 دریافت از BRSAPI</button>
+    <button onclick="fetchFromAPI()">📡 دریافت خودکار از API</button>
     <div id="goldResult" class="small-muted" style="margin-top:6px">وضعیت: آماده</div>
   </div>
 
   <div class="card">
-    <h3>نمودار و سیگنال</h3>
+    <h3>نمودار حباب و RSI</h3>
     <canvas id="trendChart"></canvas>
     <div id="signalsList"></div>
   </div>
@@ -50,7 +49,6 @@ button{cursor:pointer;background:#ffd369;color:#000;font-weight:600}
 const BRS_URL = "https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU";
 let historyData = JSON.parse(localStorage.getItem('goldHistory')) || [];
 let signals = JSON.parse(localStorage.getItem('signals')) || [];
-let notifyActive = (localStorage.getItem('notifyActive')==='1');
 
 const ctx = document.getElementById('trendChart').getContext('2d');
 const trendChart = new Chart(ctx,{type:'line',data:{labels:[],datasets:[
@@ -60,13 +58,9 @@ const trendChart = new Chart(ctx,{type:'line',data:{labels:[],datasets:[
 
 function saveRSIKey(){const k=document.getElementById('rsiApiKey').value.trim();if(!k){alert('کلید وارد نشده');return;}localStorage.setItem('rsiApiKey',k);document.getElementById('goldResult').innerText='کلید RSI ذخیره شد';}
 
-// میانگین ساده ۵ روز اخیر
 function computeAverage(data,newPrice){const recent=data.slice(-5).map(d=>d.price);recent.push(newPrice);return recent.reduce((a,b)=>a+b,0)/recent.length;}
-
-// محاسبه RSI از آرایه قیمت (Fallback)
 function computeRSI(prices,period=14){if(prices.length<period+1)return 50;let gains=0,losses=0;for(let i=prices.length-period;i<prices.length;i++){const diff=prices[i]-prices[i-1];if(diff>0)gains+=diff;else losses+=Math.abs(diff);}if(losses===0)return 100;const rs=gains/losses;return 100-(100/(1+rs));}
 
-// گرفتن RSI از AlphaVantage
 async function fetchRSIFromAPI(symbol='XAUUSD',interval='daily',time_period=14){
   const key = localStorage.getItem('rsiApiKey'); if(!key) return null;
   try{const url=`https://www.alphavantage.co/query?function=RSI&symbol=${symbol}&interval=${interval}&time_period=${time_period}&series_type=close&apikey=${key}`;
@@ -79,7 +73,6 @@ function pushSignal(type,text){const now=new Date().toLocaleString();signals.uns
 function renderSignals(){const el=document.getElementById('signalsList');el.innerHTML='';if(signals.length===0){el.innerHTML='<div class="small-muted">هنوز سیگنالی صادر نشده</div>';return;}signals.forEach(s=>{const div=document.createElement('div');div.className='signal-item';div.innerHTML=`<strong>[${s.type}]</strong> ${s.text} <div class="small-muted">${s.ts}</div>`;el.appendChild(div);});}
 function updateChart(){trendChart.data.labels=historyData.map((_,i)=>i+1);trendChart.data.datasets[0].data=historyData.map(d=>d.bubble);trendChart.data.datasets[1].data=historyData.map(d=>d.rsi);trendChart.data.datasets[0].pointBackgroundColor=historyData.map(d=>d.signal==='entry'?'#16a34a':d.signal==='exit'?'#ef4444':'#60a5fa');trendChart.update();}
 
-// افزودن داده (دستی یا API)
 async function addData(){
   const gold=parseFloat(document.getElementById('gold18').value);
   const usd=parseFloat(document.getElementById('usd').value)||0;
@@ -106,7 +99,6 @@ async function addData(){
   updateChart();
 }
 
-// دریافت از BRSAPI و ثبت خودکار
 async function fetchFromAPI(){
   try{
     const res=await fetch(BRS_URL); const j=await res.json();
@@ -121,7 +113,6 @@ async function fetchFromAPI(){
   }catch(err){console.error(err); document.getElementById('goldResult').innerText='❌ خطا در دریافت از API';}
 }
 
-// بارگذاری اولیه
 function init(){updateChart();renderSignals();}
 init();
 </script>
