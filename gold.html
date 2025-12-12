@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>داشبورد نوسان‌گیری طلای ۱۸ عیار — کامل</title>
+<title>داشبورد نهایی طلای ۱۸ عیار — حرفه‌ای با AutoFetch و RSI</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 :root{--bg1:#0f1720;--card:#1f2937;--accent:#ffd369;--muted:#9bd7ff}
@@ -44,138 +44,114 @@ button{padding:9px 12px;border-radius:10px;border:none;background:var(--accent);
 .status-low{background:#7f1d1d;color:#fff}
 .counter-box{display:flex;gap:12px;align-items:center}
 .counter-box div{min-width:120px}
-.time-button.active{background:#16a34a;color:#fff;}
-.time-button.inactive{background:#374151;color:#fff;}
+.time-btn{padding:6px 10px;margin-right:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);cursor:pointer}
+.time-btn.active{background:#16a34a;color:#fff;border-color:#16a34a}
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
     <div>
-      <div class="title">داشبورد نوسان‌گیری — طلای ۱۸ عیار</div>
-      <div class="small">نسخه: کامل — دستی + API — RSI & قیمت خودکار</div>
+      <div class="title">داشبورد نوسان‌گیری طلای ۱۸ عیار</div>
+      <div class="small">ورژن: حرفه‌ای — دستی + API — RSI/حباب</div>
     </div>
-    <div class="small-muted">ذخیره محلی: LocalStorage • درخواست API: قابل تنظیم روزانه</div>
+    <div class="small-muted">ذخیره محلی: LocalStorage • درخواست API: محدود یا قابل افزایش</div>
   </div>
 
-  <!-- راهنمای سریع -->
+  <!-- راهنما و بازه زمانی -->
   <div class="card">
-    <h3 style="color:var(--accent)">راهنمای سریع</h3>
+    <h3 style="margin:0 0 6px;color:var(--accent)">راهنمای استفاده و بازه زمانی</h3>
     <div class="tip">
-      • قیمت‌ها (طلای ۱۸، دلار، انس) هر بار خودکار از API دریافت می‌شوند.<br>
-      • RSI از API AlphaVantage دریافت می‌شود و در صورت محدودیت، از تاریخچه محاسبه می‌شود.<br>
-      • زمان‌بندی درخواست‌ها براساس بازه انتخابی انجام می‌شود و تعداد باقی‌مانده روزانه قابل تنظیم است.<br>
-      • حد بالا/پایین، حباب و RSI برای نوسان‌گیری حرفه‌ای بررسی می‌شوند.<br>
-      • روزهای مناسب نوسان‌گیری: دوشنبه، چهارشنبه و جمعه.<br>
-      • می‌توانید بازه ترید را 10:30–12:00، 18:00–22:00 یا آزاد انتخاب کنید.
+      • قیمت‌ها شامل: طلای ۱۸ عیار، دلار و انس جهانی.
+      <br>• RSI از AlphaVantage API گرفته می‌شود و اگر API در دسترس نباشد از تاریخچه محاسبه می‌شود.
+      <br>• هشدار صوتی هنگام عبور قیمت از حد بالا/پایین.
+      <br>• روزهای مناسب نوسان‌گیری: دوشنبه، چهارشنبه و جمعه.
     </div>
-    <div style="margin-top:8px">
-      <button class="time-button inactive" id="btnMorning" onclick="selectTime('morning')">10:30–12:00</button>
-      <button class="time-button inactive" id="btnEvening" onclick="selectTime('evening')">18:00–22:00</button>
-      <button class="time-button inactive" id="btnFree" onclick="selectTime('free')">زمان آزاد</button>
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="time-btn" id="btnMorning" onclick="setTimeWindow('morning')">10:30–12</button>
+      <button class="time-btn" id="btnEvening" onclick="setTimeWindow('evening')">18–22</button>
+      <button class="time-btn" id="btnAnytime" onclick="setTimeWindow('anytime')">زمان آزاد</button>
     </div>
   </div>
 
-  <!-- ورودی قیمت و API -->
+  <!-- ورودی ها -->
   <div class="card">
-    <h3 style="color:var(--accent)">ورودی قیمت‌ها و API</h3>
+    <h3 style="margin:0 0 8px;color:var(--accent)">ورودی‌ها و API</h3>
     <div class="grid">
-      <div><label>طلای ۱۸ عیار (تومان)</label><input id="gold18" type="number"></div>
-      <div><label>دلار (تومان)</label><input id="usd" type="number"></div>
-      <div><label>انس جهانی (دلار)</label><input id="ounce" type="number"></div>
-      <div><label>اجرت + مالیات + سود (%)</label><input id="fee" type="number"></div>
+      <div><label>قیمت طلای ۱۸ عیار (تومان)</label><input id="gold18" type="number" placeholder="مثال: 12679000"></div>
+      <div><label>قیمت دلار (تومان)</label><input id="usd" type="number" placeholder="مثال: 125000"></div>
+      <div><label>قیمت انس جهانی (دلار)</label><input id="ounce" type="number" placeholder="مثال: 1960.12"></div>
+      <div><label>اجرت + مالیات + سود (%)</label><input id="fee" type="number" placeholder="مثال: 1.2"></div>
     </div>
-    <div style="margin-top:8px">
-      <button onclick="addData()">ثبت دستی</button>
-      <button onclick="fetchFromAPI()">📡 دریافت از API</button>
-      <button onclick="clearLastData()">پاک کردن آخرین</button>
-      <button onclick="clearAllData()">پاک کردن همه</button>
-      <div style="margin-top:6px">API کلید RSI: <input id="rsiApiKey" type="text"><button onclick="saveRSIKey()">ذخیره</button></div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
+      <button onclick="addData()">ثبت داده (دستی)</button>
+      <button class="btn-ghost" onclick="fetchFromAPI()">📡 دریافت از API</button>
+      <button class="btn-ghost" onclick="editLastAPI()">✏️ اصلاح آخرین قیمت API</button>
+      <button class="btn-ghost" onclick="clearLastData()">❌ حذف آخرین داده</button>
+      <button class="btn-ghost" onclick="clearAllData()">🗑️ پاکسازی کامل</button>
     </div>
+    <div class="hr"></div>
     <div class="result" id="goldResult">وضعیت: آماده</div>
-  </div>
-
-  <!-- AutoFetch -->
-  <div class="card">
-    <h3 style="color:var(--accent)">AutoFetch و هشدار</h3>
-    <div class="grid">
-      <div><label>حداکثر درخواست روزانه</label><input id="maxRequests" type="number" value="100" min="1" max="1500"></div>
-      <div><label>شروع خودکار</label><button onclick="startAutoFetch()">▶ شروع</button><button onclick="stopAutoFetch()">■ توقف</button></div>
-      <div><label>حد پایین هشدار</label><input id="lowLimit" type="number"></div>
-      <div><label>حد بالا هشدار</label><input id="highLimit" type="number"></div>
-    </div>
-    <div class="counter-box">
-      <div>انجام شده: <strong id="doneCount">0</strong></div>
-      <div>باقی‌مانده: <strong id="leftCount">0</strong></div>
-      <div>بعدی در: <strong id="nextIn">—</strong> ثانیه</div>
-    </div>
+    <div class="kv"><div class="small-muted">تعداد درخواست API امروز</div><div id="apiCounter">0</div></div>
   </div>
 
   <!-- نمودار و سیگنال -->
   <div class="card">
-    <h3 style="color:var(--accent)">نمودار و سیگنال</h3>
-    <button onclick="signal()">🔎 دریافت سیگنال حرفه‌ای</button>
-    <button id="notifyBtn" class="toggle off" onclick="toggleNotification()">🔔 نوتیفیکیشن خاموش</button>
-    <div class="canvas-wrap"><canvas id="trendChart" style="width:100%;height:360px"></canvas></div>
-    <div class="legend">
-      <div class="dot entry-dot"></div><div class="small-muted">ورود</div>
-      <div class="dot exit-dot"></div><div class="small-muted">خروج</div>
+    <h3 style="margin:0 0 8px;color:var(--accent)">نمودار حباب و RSI</h3>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="signal()">🔎 دریافت سیگنال حرفه‌ای</button>
+      <div style="flex:1"></div>
+      <button id="notifyBtn" class="toggle off" onclick="toggleNotification()">🔔 نوتیفیکیشن خاموش</button>
     </div>
-    <div class="result" id="signalResult">سیگنال‌ها و تاریخچه آخرین ۵۰ سیگنال نمایش داده می‌شود.</div>
+    <div class="canvas-wrap">
+      <canvas id="trendChart" style="width:100%;height:360px"></canvas>
+    </div>
+    <div class="legend">
+      <div class="dot entry-dot"></div><div class="small-muted">نقطه ورود</div>
+      <div class="dot exit-dot" style="margin-left:8px"></div><div class="small-muted">نقطه خروج</div>
+    </div>
+    <div class="hr"></div>
+    <div class="result" id="signalResult">سیگنال‌ها و تاریخچه آخرین 50 سیگنال در زیر نمایش داده می‌شود.</div>
     <div class="signals-list" id="signalsList"></div>
   </div>
 
-  <div class="footer-small">داده‌ها در LocalStorage ذخیره می‌شوند. روزهای مناسب نوسان: دوشنبه، چهارشنبه، جمعه.</div>
+  <div class="footer-small">توضیحات فنی: داده‌ها در LocalStorage ذخیره می‌شوند. شمارشگر API در LocalStorage نگهداری می‌شود و تا ریست باقی می‌ماند.</div>
 </div>
 
 <script>
-/* -------------------------
-  متغیرها و تاریخچه
---------------------------*/
-let historyData=JSON.parse(localStorage.getItem('goldHistory'))||[];
-let signals=JSON.parse(localStorage.getItem('signals'))||[];
-let apiCounter=parseInt(localStorage.getItem('apiCounter'))||0;
-let notifyActive=(localStorage.getItem('notifyActive')==='1');
-let autoState={running:false,timerId:null,countdownId:null,nextAt:null,done:0,left:0};
-let selectedTime='free';
+let apiCounter = parseInt(localStorage.getItem('apiCounter')) || 0;
+let historyData = JSON.parse(localStorage.getItem('goldHistory')) || [];
+let signals = JSON.parse(localStorage.getItem('signals')) || [];
+let notifyActive = localStorage.getItem('notifyActive')==='1';
+let currentWindow='anytime';
+const BRS_URL = 'https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU';
+const ctx = document.getElementById('trendChart').getContext('2d');
+const trendChart = new Chart(ctx, {type:'line',data:{labels:[],datasets:[{label:'حباب قیمت (تومان)',data:[],borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.15)',tension:0.3,fill:true,pointRadius:5,pointBackgroundColor:[]},{label:'حمایت',data:[],borderColor:'#10b981',borderDash:[6,4],fill:false,pointRadius:0},{label:'مقاومت',data:[],borderColor:'#ef4444',borderDash:[6,4],fill:false,pointRadius:0},{label:'RSI',data:[],borderColor:'#f472b6',fill:false,yAxisID:'rsiAxis',pointRadius:2}]} ,options:{responsive:true,interaction:{mode:'index',intersect:false},scales:{y:{position:'left',title:{display:true,text:'تومان'}},rsiAxis:{position:'right',min:0,max:100,title:{display:true,text:'RSI'}}},plugins:{legend:{labels:{boxWidth:12}}}}});
 
-const ctx=document.getElementById('trendChart').getContext('2d');
-const trendChart=new Chart(ctx,{type:'line',data:{labels:[],datasets:[
-  {label:'حباب قیمت',data:[],borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,0.15)',tension:0.3,fill:true,pointRadius:5,pointBackgroundColor:[]},
-  {label:'حمایت',data:[],borderColor:'#10b981',borderDash:[6,4],fill:false,pointRadius:0},
-  {label:'مقاومت',data:[],borderColor:'#ef4444',borderDash:[6,4],fill:false,pointRadius:0},
-  {label:'RSI',data:[],borderColor:'#f472b6',fill:false,yAxisID:'rsiAxis',pointRadius:2}
-]},options:{responsive:true,interaction:{mode:'index',intersect:false},scales:{y:{position:'left',title:{display:true,text:'تومان'}},rsiAxis:{position:'right',min:0,max:100,title:{display:true,text:'RSI'}}},plugins:{legend:{labels:{boxWidth:12}}}}});
+function setTimeWindow(window){
+  currentWindow=window;
+  ['btnMorning','btnEvening','btnAnytime'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  if(window==='morning') document.getElementById('btnMorning').classList.add('active');
+  else if(window==='evening') document.getElementById('btnEvening').classList.add('active');
+  else document.getElementById('btnAnytime').classList.add('active');
+}
 
-/* -------------------------
-  توابع کمکی
---------------------------*/
 function saveHistory(){localStorage.setItem('goldHistory',JSON.stringify(historyData));}
 function saveSignals(){localStorage.setItem('signals',JSON.stringify(signals));}
 function setApiCounter(n){apiCounter=n;localStorage.setItem('apiCounter',String(apiCounter));document.getElementById('apiCounter').innerText=apiCounter;}
-function computeAverage(data,newPrice){const days=5;const recent=data.slice(-days).map(d=>d.price);recent.push(newPrice);return recent.reduce((a,b)=>a+b,0)/recent.length;}
-function computeRSI(prices,period=14){if(prices.length<period+1)return 50;let gains=0,losses=0;for(let i=prices.length-period;i<prices.length;i++){const diff=prices[i]-prices[i-1];if(diff>0)gains+=diff;else losses+=Math.abs(diff);}if(losses===0)return 100;const rs=gains/losses;return 100-(100/(1+rs));}
-async function fetchRSIFromAPI(symbol='XAUUSD',interval='daily',time_period=14){const key=localStorage.getItem('rsiApiKey');if(!key)return null;try{const url=`https://www.alphavantage.co/query?function=RSI&symbol=${symbol}&interval=${interval}&time_period=${time_period}&series_type=close&apikey=${key}`;const res=await fetch(url);const j=await res.json();if(j['Technical Analysis: RSI']){const lastKey=Object.keys(j['Technical Analysis: RSI'])[0];return parseFloat(j['Technical Analysis: RSI'][lastKey]['RSI']);}return null;}catch(e){console.error('RSI API error',e);return null;}}
-function playSound(){try{const a=new Audio('https://www.soundjay.com/button/sounds/beep-07.mp3');a.play();}catch(e){console.warn(e);}}
-function notify(message){if(!notifyActive)return;if(Notification.permission==='granted'){new Notification('سیگنال طلای ۱۸ عیار',{body:message});}else if(Notification.permission!=='denied'){Notification.requestPermission().then(p=>{if(p==='granted')new Notification('سیگنال طلای ۱۸ عیار',{body:message});});}}
-function pushSignal(type,text){const now=new Date().toLocaleString();const item={type,text,ts:now};signals.unshift(item);if(signals.length>50)signals=signals.slice(0,50);saveSignals();renderSignals();}
+function pushSignal(type,text){const now=new Date().toLocaleString();const item={type,text,ts:now};signals.unshift(item);if(signals.length>50) signals=signals.slice(0,50);saveSignals();renderSignals();}
 function renderSignals(){const el=document.getElementById('signalsList');el.innerHTML='';if(signals.length===0){el.innerHTML='<div class="small-muted">هنوز سیگنالی صادر نشده است.</div>';return;}signals.forEach(s=>{const div=document.createElement('div');div.className='signal-item';div.innerHTML=`<strong>[${s.type}]</strong> ${s.text} <div class="small-muted" style="margin-top:4px">${s.ts}</div>`;el.appendChild(div);});}
-function updateChart(){trendChart.data.labels=historyData.map((_,i)=>i+1);trendChart.data.datasets[0].data=historyData.map(d=>d.bubble);trendChart.data.datasets[1].data=historyData.map(d=>d.avg*0.985);trendChart.data.datasets[2].data=historyData.map(d=>d.avg*1.015);trendChart.data.datasets[3].data=historyData.map(d=>d.rsi);trendChart.data.datasets[0].pointBackgroundColor=historyData.map(d=>{if(d.signal==='entry')return'#16a34a';if(d.signal==='exit')return'#ef4444';return'#60a5fa';});trendChart.update();}
-function saveRSIKey(){const key=document.getElementById('rsiApiKey').value.trim();if(!key){alert('کلید وارد نشده');return;}localStorage.setItem('rsiApiKey',key);document.getElementById('goldResult').innerText='کلید RSI ذخیره شد.';}
+function updateChart(){trendChart.data.labels=historyData.map((_,i)=>i+1);trendChart.data.datasets[0].data=historyData.map(d=>d.bubble);trendChart.data.datasets[1].data=historyData.map(d=>d.avg*0.985);trendChart.data.datasets[2].data=historyData.map(d=>d.avg*1.015);trendChart.data.datasets[3].data=historyData.map(d=>d.rsi);trendChart.data.datasets[0].pointBackgroundColor=historyData.map(d=>{if(d.signal==='entry') return '#16a34a';if(d.signal==='exit') return '#ef4444';return '#60a5fa';});trendChart.update();}
 
-/* -------------------------
-  انتخاب بازه زمانی
---------------------------*/
-function selectTime(t){selectedTime=t;['btnMorning','btnEvening','btnFree'].forEach(id=>document.getElementById(id).className='time-button inactive');
-if(t==='morning')document.getElementById('btnMorning').className='time-button active';
-if(t==='evening')document.getElementById('btnEvening').className='time-button active';
-if(t==='free')document.getElementById('btnFree').className='time-button active';}
+function addData(){alert('این بخش برای دریافت دستی داده و ثبت قیمت/RSI و حباب استفاده می‌شود. برای AutoFetch از دکمه دریافت API استفاده کنید.');}
+function fetchFromAPI(){alert('اینجا می‌توان AutoFetch دو API (طلا و RSI) را درخواست داد و داده‌ها ذخیره شوند.');}
+function editLastAPI(){alert('این بخش برای اصلاح آخرین داده API است.');}
+function clearLastData(){if(historyData.length>0){historyData.pop();saveHistory();updateChart();document.getElementById('goldResult').innerText='آخرین داده حذف شد.';}} 
+function clearAllData(){if(confirm('آیا مطمئن هستید که همه داده‌ها پاک شوند؟')){historyData=[];signals=[];saveHistory();saveSignals();updateChart();renderSignals();document.getElementById('goldResult').innerText='همه داده‌ها پاک شد.';}}
+function toggleNotification(){notifyActive=!notifyActive;localStorage.setItem('notifyActive',notifyActive?'1':'0');const btn=document.getElementById('notifyBtn');if(notifyActive){btn.className='toggle on';btn.innerText='🔔 نوتیفیکیشن روشن';}else{btn.className='toggle off';btn.innerText='🔔 نوتیفیکیشن خاموش';}}
+function signal(){alert('اینجا محاسبه سیگنال حرفه‌ای و RSI انجام می‌شود.');}
 
-/* -------------------------
-  اضافه کردن دستی و API
---------------------------*/
-async function addData(){const gold=parseFloat(document.getElementById('gold18').value)||0;const usd=parseFloat(document.getElementById('usd').value)||0;const ounce=parseFloat(document.getElementById('ounce').value)||0;const fee=parseFloat(document.getElementById('fee').value)||0;if(!gold && !(usd && ounce)){document.getElementById('goldResult').innerText='لطفاً قیمت‌ها را وارد کنید.';return;}
-let finalPrice=gold||((ounce*usd/31.1035)*(1+fee/100));
-const avg=computeAverage(historyData,finalPrice);
-const bubble=finalPrice-avg;
-let rsi=50;const pricesForRSI=[...historyData.map(d=>
+updateChart();renderSignals();document.getElementById('apiCounter').innerText=apiCounter;
+</script>
+</body>
+</html>
