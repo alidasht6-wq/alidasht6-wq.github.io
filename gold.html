@@ -3,278 +3,533 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>داشبورد نوسان‌گیری طلای ۱۸ عیار — یکپارچه</title>
+<title>داشبورد نوسان‌گیری طلای ۱۸ عیار — عملیاتی</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg1:#0f1720;--card:#1f2937;--accent:#ffd369;--muted:#9bd7ff}
-*{box-sizing:border-box}
-body{margin:0;padding:14px;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg1),#0b1116);color:#fff}
-.container{max-width:980px;margin:0 auto}
-.header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
-.title{font-size:1.25rem;color:var(--accent);font-weight:700}
-.small{font-size:0.85rem;color:#cbd5e1}
-.card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 6px 30px rgba(0,0,0,0.6);border:1px solid rgba(255,211,105,0.06)}
-.row{display:flex;gap:10px;align-items:center}
+:root{--bg:#071016;--card:#0f1720;--accent:#ffd369}
+body{margin:0;padding:14px;font-family:system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#051019);color:#e6eef8}
+.container{max-width:1100px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.title{color:var(--accent);font-weight:800}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.005));border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid rgba(255,211,105,0.04)}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(max-width:740px){.grid{grid-template-columns:1fr}}
-label{display:block;font-size:0.85rem;margin-bottom:6px;color:#d1d5db}
-input[type=number],input[type=text]{width:100%;padding:8px;border-radius:8px;border:none;background:#0b1220;color:#fff}
-button{padding:9px 12px;border-radius:10px;border:none;background:var(--accent);color:#000;font-weight:600;cursor:pointer}
-.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff}
-.result{background:#071018;padding:10px;border-radius:8px;margin-top:8px;border:1px solid rgba(255,255,255,0.03);font-size:0.95rem}
-.kv{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:0.95rem}
-.tip{color:var(--muted);font-size:0.88rem;line-height:1.45}
-.footer-small{font-size:0.82rem;color:#94a3b8;margin-top:8px}
-.toggle{display:inline-block;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:700}
+@media(max-width:780px){.grid{grid-template-columns:1fr}}
+input,select{width:100%;padding:8px;border-radius:8px;border:none;background:#07121a;color:#fff}
+button{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);font-weight:700;cursor:pointer}
+.small{color:#9fbcd9;font-size:13px}
+.toggle{padding:6px 10px;border-radius:8px;cursor:pointer;font-weight:700}
 .toggle.on{background:#16a34a;color:#fff}
 .toggle.off{background:#ef4444;color:#fff}
-.signals-list{max-height:160px;overflow:auto;margin-top:8px;border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.03);background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
-.signal-item{padding:6px;border-bottom:1px dashed rgba(255,255,255,0.03);font-size:0.9rem}
-.canvas-wrap{background:#06121a;padding:8px;border-radius:10px;margin-top:8px}
-.legend{display:flex;gap:8px;align-items:center;margin-top:8px}
-.legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
-.entry-dot{background:#16a34a}
-.exit-dot{background:#ef4444}
-.hr{height:1px;background:rgba(255,255,255,0.03);margin:12px 0;border-radius:2px}
-.small-muted{color:#94a3b8;font-size:0.85rem}
-.input-inline{display:flex;gap:8px}
-.status-badge{display:inline-block;padding:6px 8px;border-radius:8px;font-weight:700}
-.status-normal{background:#374151;color:#fff}
-.status-high{background:#065f46;color:#fff}
-.status-low{background:#7f1d1d;color:#fff}
-.counter-box{display:flex;gap:12px;align-items:center}
-.counter-box div{min-width:120px}
+.result{background:#06121a;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);margin-top:8px}
+.time-btn{padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);cursor:pointer;background:transparent;color:#fff}
+.time-btn.active{background:#16a34a;color:#fff;border-color:#16a34a}
+.canvas-wrap{background:#05121a;padding:8px;border-radius:8px;margin-top:8px}
+.signals-list{max-height:180px;overflow:auto;padding:6px;border-radius:6px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
+.signal-item{padding:6px;border-bottom:1px dashed rgba(255,255,255,0.03)}
+.counter{display:flex;gap:12px;align-items:center}
+.counter div{min-width:140px}
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
     <div>
-      <div class="title">داشبورد نوسان‌گیری طلای ۱۸ عیار</div>
-      <div class="small">ورژن: یکپارچه — دستی + API — RSI + AutoFetch</div>
+      <div class="title">داشبورد نوسان‌گیری — طلای ۱۸ عیار</div>
+      <div class="small">یکپارچه — AutoFetch دقیق — RSI (AlphaVantage یا محلی)</div>
     </div>
-    <div class="small-muted">ذخیره محلی: LocalStorage • شمارش درخواست روزانه پویا</div>
+    <div class="small">نوا جون — نسخه عملیاتی</div>
   </div>
 
   <!-- راهنما -->
   <div class="card">
-    <h3 style="margin:0 0 6px;color:var(--accent)">راهنمای سریع نوسان‌گیری</h3>
-    <div class="tip">
-      • می‌توانید قیمت‌ها را <strong>دستی</strong> وارد کنید یا از دکمهٔ <strong>دریافت از API</strong> استفاده کنید.<br>
-      • RSI واقعی با کلید AlphaVantage یا fallback از تاریخچه محاسبه می‌شود.<br>
-      • حد بالا/پایین، حباب و RSI برای سیگنال خرید/فروش استفاده می‌شوند.<br>
-      • دو بازه پیشنهادی برای نوسان‌گیری: 10:30–12:00 و 18:00–22:00. می‌توانید زمان آزاد هم انتخاب کنید.<br>
-      • روزهای مناسب برای نوسان‌گیری: شنبه تا چهارشنبه (مناسب‌ترین روز: سه‌شنبه)<br>
-      • AutoFetch می‌تواند درخواست‌ها را به صورت دقیق در بازه انتخابی زمان‌بندی کند و باقی‌مانده دقیقه/ثانیه و تعداد درخواست باقی‌مانده را نمایش دهد.
-    </div>
+    <strong>راهنما (نکات مهم)</strong>
+    <ul class="small">
+      <li>روزهای مناسب نوسان‌گیری: شنبه تا چهارشنبه (سه‌شنبه مناسب‌ترین).</li>
+      <li>بازه‌های پیشنهادی: 10:30–12:00 و 18:00–22:00. یا زمان آزاد (Free run).</li>
+      <li>در AutoFetch وقتی بازه انتخاب شود، باقیماندهٔ بازه تقسیم بر تعداد درخواست باقی‌مانده خواهد شد.</li>
+      <li>اگر کلید AlphaVantage وارد نشود یا محدودیت رخ دهد، RSI از تاریخچهٔ محاسبه می‌شود.</li>
+    </ul>
   </div>
 
   <!-- انتخاب بازه -->
   <div class="card">
-    <h3 style="margin:0 0 8px;color:var(--accent)">انتخاب بازه زمانی</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button id="btnMorning" class="toggle off" onclick="selectTimeRange('morning', this)">10:30–12:00</button>
-      <button id="btnEvening" class="toggle off" onclick="selectTimeRange('evening', this)">18:00–22:00</button>
-      <button id="btnFree" class="toggle off" onclick="selectTimeRange('free', this)">زمان آزاد</button>
+    <strong>انتخاب بازه</strong>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <button id="btnMorning" class="time-btn" onclick="selectTime('morning', this)">10:30–12:00</button>
+      <button id="btnEvening" class="time-btn" onclick="selectTime('evening', this)">18:00–22:00</button>
+      <button id="btnFree" class="time-btn" onclick="selectTime('free', this)">زمان آزاد</button>
     </div>
-    <div class="small-muted" style="margin-top:6px">راهنما: رنگ سبز فعال و قرمز غیرفعال</div>
   </div>
 
-  <!-- ورودی‌ها -->
+  <!-- ورودی -->
   <div class="card">
-    <h3 style="margin:0 0 8px;color:var(--accent)">ورودی قیمت‌ها</h3>
-    <div class="grid">
+    <strong>ورودی قیمت‌ها</strong>
+    <div class="grid" style="margin-top:8px">
       <div>
-        <label>قیمت طلای ۱۸ عیار (تومان)</label>
+        <label class="small">طلای ۱۸ عیار (تومان)</label>
         <input id="gold18" type="number" placeholder="مثال: 12679000">
       </div>
       <div>
-        <label>قیمت دلار (تومان)</label>
+        <label class="small">دلار (تومان)</label>
         <input id="usd" type="number" placeholder="مثال: 125000">
       </div>
       <div>
-        <label>قیمت انس جهانی (دلار)</label>
+        <label class="small">انس جهانی (دلار)</label>
         <input id="ounce" type="number" placeholder="مثال: 1960.12">
       </div>
       <div>
-        <label>اجرت + مالیات + سود (%)</label>
+        <label class="small">اجرت+مالیات+سود (%)</label>
         <input id="fee" type="number" placeholder="مثال: 1.2">
       </div>
     </div>
 
-    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
-      <button onclick="addData()">ثبت داده (دستی)</button>
-      <button class="btn-ghost" onclick="fetchFromAPI()">📡 دریافت از API</button>
-      <button class="btn-ghost" onclick="editLastAPI()">✏️ اصلاح آخرین قیمت API</button>
-      <button class="btn-ghost" onclick="clearLastData()">پاک کردن آخرین داده</button>
-      <button class="btn-ghost" onclick="clearAllData()">پاک کردن همه داده‌ها</button>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="onAddManual()">ثبت دستی</button>
+      <button onclick="onFetchOnce()">📡 دریافت هم‌زمان (API)</button>
+      <button onclick="onEditLast()">✏️ اصلاح آخرین</button>
+      <button onclick="onClearLast()">❌ حذف آخرین</button>
+      <button onclick="onClearAll()">🗑 پاکسازی کامل</button>
+
+      <div style="flex:1"></div>
+
+      <div style="min-width:260px">
+        <label class="small">کلید RSI (AlphaVantage) — اختیاری</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="rsiKey" type="text" placeholder="ALPHAVANTAGE_KEY">
+          <button class="btn-ghost" onclick="saveRsiKey()">ذخیره</button>
+        </div>
+        <div class="small" style="margin-top:6px">اگر کلید وارد نشود، RSI محلی محاسبه می‌شود.</div>
+      </div>
     </div>
 
-    <div class="hr"></div>
-    <div class="result" id="goldResult">وضعیت: آماده</div>
+    <div class="result" id="lastStatus">وضعیت: آماده</div>
   </div>
 
   <!-- AutoFetch -->
   <div class="card">
-    <h3 style="margin:0 0 8px;color:var(--accent)">AutoFetch و زمان‌بندی</h3>
-    <div class="grid">
+    <strong>AutoFetch & Alerts</strong>
+    <div class="grid" style="margin-top:8px">
       <div>
-        <label>درخواست کل در بازه انتخابی (حداکثر 1500)</label>
-        <input id="maxRequests" type="number" value="100" min="1" max="1500">
+        <label class="small">تعداد کل درخواست در بازه</label>
+        <input id="maxReq" type="number" value="100" min="1" max="1500">
       </div>
       <div>
-        <label>اجرای خودکار</label>
-        <div style="display:flex;gap:8px"><button onclick="startAutoFetch()">▶ شروع</button><button class="btn-ghost" onclick="stopAutoFetch()">■ توقف</button></div>
+        <label class="small">اجرای خودکار</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button onclick="startAuto()">▶ شروع</button>
+          <button class="btn-ghost" onclick="stopAuto()">■ توقف</button>
+        </div>
       </div>
       <div>
-        <label>حد پایین هشدار (تومان)</label>
+        <label class="small">حد پایین هشدار (تومان)</label>
         <input id="lowLimit" type="number" placeholder="مثال: 12000000">
       </div>
       <div>
-        <label>حد بالا هشدار (تومان)</label>
+        <label class="small">حد بالا هشدار (تومان)</label>
         <input id="highLimit" type="number" placeholder="مثال: 18000000">
       </div>
     </div>
-    <div class="hr"></div>
-    <div class="counter-box">
+
+    <div style="margin-top:10px" class="counter">
       <div>انجام شده: <strong id="doneCount">0</strong></div>
       <div>باقی‌مانده: <strong id="leftCount">0</strong></div>
-      <div>بعدی در: <strong id="nextIn">—</strong> ثانیه</div>
+      <div>بعدی در: <strong id="nextIn">—</strong></div>
     </div>
   </div>
 
-  <!-- نمودار و سیگنال -->
+  <!-- نمودار -->
   <div class="card">
-    <h3 style="margin:0 0 8px;color:var(--accent)">نمودار حباب، حمایت/مقاومت و RSI</h3>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button onclick="signal()">🔎 دریافت سیگنال حرفه‌ای</button>
+    <strong>نمودار حباب و RSI</strong>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+      <button onclick="onSignal()">🔎 دریافت سیگنال</button>
       <div style="flex:1"></div>
-      <div>
-        <button id="notifyBtn" class="toggle off" onclick="toggleNotification()">🔔 نوتیفیکیشن خاموش</button>
-      </div>
+      <button id="notifyBtn" class="toggle off" onclick="toggleNotify()">🔔 نوتیفیکیشن خاموش</button>
     </div>
 
     <div class="canvas-wrap">
-      <canvas id="trendChart" style="width:100%;height:360px"></canvas>
+      <canvas id="chart" style="width:100%;height:360px"></canvas>
     </div>
 
-    <div class="legend">
-      <div class="dot entry-dot"></div><div class="small-muted">نقطه ورود</div>
-      <div class="dot exit-dot" style="margin-left:8px"></div><div class="small-muted">نقطه خروج</div>
-    </div>
+    <div style="margin-top:10px" class="signals-list" id="signals"></div>
 
-    <div class="hr"></div>
-    <div class="result" id="signalResult">سیگنال‌ها و تاریخچهٔ آخرین 50 سیگنال در زیر نمایش داده می‌شود.</div>
-
-    <div class="signals-list" id="signalsList"></div>
+    <div class="result" id="signalBox">سیگنال‌ها اینجا نمایش داده می‌شوند.</div>
   </div>
 
-  <div class="footer-small">داده‌ها در LocalStorage ذخیره می‌شوند. شمارشگر API تا ریست باقی می‌ماند.</div>
 </div>
 
 <script>
-// -------------------------
-// متغیرها و تنظیم اولیه
-// -------------------------
-const GOLD_API_URL = "https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU"; 
-let apiCounter = parseInt(localStorage.getItem('apiCounter')) || 0;
-let historyData = JSON.parse(localStorage.getItem('goldHistory')) || [];
-let signals = JSON.parse(localStorage.getItem('signals')) || [];
-let notifyActive = (localStorage.getItem('notifyActive')==='1');
-let selectedRange = null;
+/* --------- تنظیم اولیه و متغیرها --------- */
+const GOLD_API = "https://brsapi.ir/Api/Market/Gold_Currency.php?key=BBzNUXWfiBpUmeXusfw4mkbjXuXjj9nU";
+let historyData = JSON.parse(localStorage.getItem('goldHistory') || '[]');
+let signals = JSON.parse(localStorage.getItem('signals') || '[]');
+let apiCounter = parseInt(localStorage.getItem('apiCounter') || '0');
+let notifyActive = localStorage.getItem('notifyActive') === '1';
+let auto = { running:false, timerId:null, nextAt:null, done:0, left:0, countdownId:null, intervalSec:0 };
+let selectedRange = 'free'; // 'morning','evening','free'
 
-if(notifyActive){ 
-  document.getElementById('notifyBtn').className='toggle on'; 
-  document.getElementById('notifyBtn').innerText='🔔 نوتیفیکیشن روشن'; 
-}
-document.getElementById('apiCounter')?.innerText = apiCounter;
-
-let autoState = { running:false, timerId:null, countdownId:null, nextAt:null, done:0, left:0 };
-
-// Chart.js
-const ctx = document.getElementById('trendChart').getContext('2d');
-const trendChart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: [],
-    datasets: [
-      { label: 'حباب قیمت (تومان)', data: [], borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.15)', tension:0.3, fill:true, pointRadius:5, pointBackgroundColor:[] },
-      { label: 'حمایت', data: [], borderColor:'#10b981', borderDash:[6,4], fill:false, pointRadius:0 },
-      { label: 'مقاومت', data: [], borderColor:'#ef4444', borderDash:[6,4], fill:false, pointRadius:0 },
-      { label: 'RSI', data: [], borderColor:'#f472b6', fill:false, yAxisID:'rsiAxis', pointRadius:2 }
-    ]
-  },
+const chartCtx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(chartCtx, {
+  type:'line',
+  data:{ labels:[], datasets:[
+    { label:'حباب (تومان)', data:[], borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,0.12)', fill:true, tension:0.3, pointRadius:5, pointBackgroundColor:[] },
+    { label:'حمایت', data:[], borderColor:'#10b981', borderDash:[6,4], fill:false, pointRadius:0 },
+    { label:'مقاومت', data:[], borderColor:'#ef4444', borderDash:[6,4], fill:false, pointRadius:0 },
+    { label:'RSI', data:[], borderColor:'#f472b6', fill:false, yAxisID:'rsi' }
+  ]},
   options:{
     responsive:true,
     interaction:{mode:'index',intersect:false},
-    scales:{ y:{position:'left',title:{display:true,text:'تومان (حباب/سطوح)'}}, rsiAxis:{position:'right',min:0,max:100,title:{display:true,text:'RSI'}} },
+    scales:{ y:{position:'left'}, rsi:{position:'right', min:0, max:100} },
     plugins:{legend:{labels:{boxWidth:12}}}
   }
 });
 
-// -------------------------
-// توابع کمکی
-// -------------------------
-function saveHistory(){ localStorage.setItem('goldHistory', JSON.stringify(historyData)); }
-function saveSignals(){ localStorage.setItem('signals', JSON.stringify(signals)); }
-function setApiCounter(n){ apiCounter=n; localStorage.setItem('apiCounter',String(apiCounter)); document.getElementById('apiCounter').innerText=apiCounter; }
-
-function computeAverage(data,newPrice){
-  const days=5;
-  const recent = data.slice(-days).map(d=>d.price);
-  recent.push(newPrice);
-  return recent.reduce((a,b)=>a+b,0)/recent.length;
+/* --------- کمکی‌ها --------- */
+function saveAll(){
+  localStorage.setItem('goldHistory', JSON.stringify(historyData));
+  localStorage.setItem('signals', JSON.stringify(signals));
+  localStorage.setItem('apiCounter', String(apiCounter));
+  localStorage.setItem('notifyActive', notifyActive ? '1' : '0');
 }
 
-function computeRSI(prices, period=14){
-  if(prices.length<period+1) return 50;
+function formatNumber(n){ if(n===null||n===undefined||isNaN(n)) return '—'; return Number(n).toLocaleString(); }
+
+function computeAvg(data, price){ const days=5; const arr=data.slice(-days).map(d=>d.price); arr.push(price); const s=arr.reduce((a,b)=>a+b,0); return s/arr.length; }
+
+function computeRSI_local(prices, period=14){
+  if(prices.length < period+1) return 50;
   let gains=0, losses=0;
   for(let i=prices.length-period;i<prices.length;i++){
-    const diff = prices[i]-prices[i-1];
-    if(diff>0) gains+=diff; else losses+=Math.abs(diff);
+    const d = prices[i]-prices[i-1];
+    if(d>0) gains += d; else losses += Math.abs(d);
   }
   if(losses===0) return 100;
-  const rs=gains/losses;
-  return 100-(100/(1+rs));
+  const rs = gains/losses;
+  return 100 - (100/(1+rs));
 }
 
-async function fetchRSIFromAPI(symbol='XAUUSD', interval='daily', time_period=14){
-  const key = localStorage.getItem('rsiApiKey');
+async function fetchRSI_external(symbol='XAUUSD'){
+  const key = localStorage.getItem('rsiKey') || document.getElementById('rsiKey').value.trim();
   if(!key) return null;
   try{
-    const url = `https://www.alphavantage.co/query?function=RSI&symbol=${symbol}&interval=${interval}&time_period=${time_period}&series_type=close&apikey=${key}`;
-    const res = await fetch(url);
-    const j = await res.json();
+    const url = `https://www.alphavantage.co/query?function=RSI&symbol=${symbol}&interval=daily&time_period=14&series_type=close&apikey=${key}`;
+    const r = await fetch(url);
+    const j = await r.json();
     if(j['Technical Analysis: RSI']){
-      const lastKey = Object.keys(j['Technical Analysis: RSI'])[0];
-      return parseFloat(j['Technical Analysis: RSI'][lastKey]['RSI']);
+      const k = Object.keys(j['Technical Analysis: RSI'])[0];
+      return parseFloat(j['Technical Analysis: RSI'][k]['RSI']);
     }
     return null;
-  }catch(e){ console.error('RSI API error', e); return null; }
+  }catch(e){ console.warn('RSI fetch err', e); return null; }
 }
 
-function playSound(){ try{ new Audio('https://www.soundjay.com/button/sounds/beep-07.mp3').play(); }catch(e){console.warn(e);} }
-function notify(message){ if(!notifyActive) return; if(Notification.permission==='granted'){ new Notification('سیگنال طلای ۱۸', {body:message}); }else if(Notification.permission!=='denied'){ Notification.requestPermission().then(p=>{if(p==='granted') new Notification('سیگنال طلای ۱۸',{body:message});});} }
-
-function pushSignal(type,text){ 
+function pushSignal(type, text){
   const now = new Date().toLocaleString();
-  const item = {type,text,ts:now};
-  signals.unshift(item);
-  if(signals.length>50) signals=signals.slice(0,50);
-  saveSignals(); renderSignals();
+  signals.unshift({type, text, ts: now});
+  if(signals.length>50) signals = signals.slice(0,50);
+  saveAll(); renderSignals();
 }
 
 function renderSignals(){
-  const el=document.getElementById('signalsList'); el.innerHTML='';
-  if(signals.length===0){ el.innerHTML='<div class="small-muted">هنوز سیگنالی صادر نشده است.</div>'; return; }
+  const el = document.getElementById('signals');
+  el.innerHTML = '';
+  if(signals.length===0){ el.innerHTML = '<div class="small">هنوز سیگنالی صادر نشده است.</div>'; return; }
   signals.forEach(s=>{
-    const div=document.createElement('div');
-    div.className='signal-item';
-    div.innerHTML=`<strong>[${s.type}]</strong> ${s.text} <div class="small-muted" style="margin-top:4px">${s.ts}</div>`;
-    el.appendChild(div);
+    const d = document.createElement('div');
+    d.className = 'signal-item';
+    d.innerHTML = `<strong>[${s.type}]</strong> ${s.text} <div class="small" style="margin-top:6px">${s.ts}</div>`;
+    el.appendChild(d);
   });
 }
 
-// انتخاب بازه زمانی
-function selectTimeRange(range, btn){
- 
+function updateChart(){
+  chart.data.labels = historyData.map((_,i)=>i+1);
+  chart.data.datasets[0].data = historyData.map(h=>h.bubble);
+  chart.data.datasets[1].data = historyData.map(h=>h.avg*0.985);
+  chart.data.datasets[2].data = historyData.map(h=>h.avg*1.015);
+  chart.data.datasets[3].data = historyData.map(h=>h.rsi);
+  chart.data.datasets[0].pointBackgroundColor = historyData.map(h => h.signal==='entry' ? '#16a34a' : (h.signal==='exit' ? '#ef4444' : '#60a5fa'));
+  chart.update();
+}
+
+/* --------- عملیات دستی و API --------- */
+function onAddManual(){
+  const gold = parseFloat(document.getElementById('gold18').value);
+  const usd = parseFloat(document.getElementById('usd').value);
+  const ounce = parseFloat(document.getElementById('ounce').value);
+  const fee = parseFloat(document.getElementById('fee').value) || 0;
+  if((!gold || gold<=0) && (!usd || !ounce)){
+    document.getElementById('lastStatus').innerText = 'لطفاً یا قیمت طلای ۱۸ را وارد کنید یا دلار و انس را پر کنید.';
+    return;
+  }
+  const price = gold && gold>0 ? gold : ((ounce * usd)/31.1035) * (1 + fee/100);
+  const avg = historyData.length ? computeAvg(historyData, price) : price;
+  const bubble = price - avg;
+  const prices = historyData.map(h=>h.price).concat([price]);
+  const rsiLocal = computeRSI_local(prices, 14);
+  historyData.push({price, usd, ounce, fee, avg, bubble, rsi: rsiLocal, signal: null, ts: Date.now()});
+  saveAll();
+  updateChart();
+  document.getElementById('lastStatus').innerText = `ثبت دستی: ${formatNumber(price)} تومان — حباب: ${Math.round(bubble)} — RSI: ${rsiLocal.toFixed(2)}`;
+}
+
+async function onFetchOnce(){
+  document.getElementById('lastStatus').innerText = 'در حال دریافت...';
+  try{
+    const res = await fetch(GOLD_API);
+    const j = await res.json();
+    // BRS API structure handling (robust)
+    let gold = null, usd = null, ounce = null;
+    if(Array.isArray(j.gold)){
+      const goldObj = j.gold.find(x => x.symbol && x.symbol.includes('IR_GOLD_18K')) || j.gold.find(x=>x.symbol==='IR_GOLD_18K');
+      const xau = j.gold.find(x => x.symbol && x.symbol.includes('XAUUSD')) || j.gold.find(x=>x.symbol==='XAUUSD');
+      if(goldObj) gold = parseFloat(goldObj.price);
+      if(xau) ounce = parseFloat(xau.price);
+    }
+    if(Array.isArray(j.currency)){
+      const usdObj = j.currency.find(x => x.symbol && x.symbol.includes('USD')) || j.currency.find(x=>x.symbol==='USD');
+      if(usdObj) usd = parseFloat(usdObj.price);
+    }
+    // fallback if keys differ
+    if(!gold && j.Gold18) gold = parseFloat(j.Gold18);
+    if(!usd && j.USD) usd = parseFloat(j.USD);
+    if(!ounce && j.Ounce) ounce = parseFloat(j.Ounce);
+
+    // show values
+    if(gold) document.getElementById('gold18').value = gold;
+    if(usd) document.getElementById('usd').value = usd;
+    if(ounce) document.getElementById('ounce').value = ounce;
+
+    // compute final price and RSI
+    const fee = parseFloat(document.getElementById('fee').value) || 0;
+    const price = gold ? gold : ((ounce * usd)/31.1035) * (1 + fee/100);
+    const avg = historyData.length ? computeAvg(historyData, price) : price;
+    const bubble = price - avg;
+
+    // try external RSI
+    let rsi = await fetchRSI_external();
+    if(rsi === null) rsi = computeRSI_local(historyData.map(h=>h.price).concat([price]), 14);
+
+    // decide signal
+    let signal = null;
+    const lowLimit = parseFloat(document.getElementById('lowLimit').value) || null;
+    const highLimit = parseFloat(document.getElementById('highLimit').value) || null;
+    if((lowLimit && price <= lowLimit) || rsi <= 30) { signal = 'entry'; pushSignal('ورود', `قیمت ${formatNumber(price)} — RSI ${rsi.toFixed(2)}`); playSound(); notify(`سیگنال ورود — ${formatNumber(price)}`); }
+    else if((highLimit && price >= highLimit) || rsi >= 70) { signal = 'exit'; pushSignal('خروج', `قیمت ${formatNumber(price)} — RSI ${rsi.toFixed(2)}`); playSound(); notify(`سیگنال خروج — ${formatNumber(price)}`); }
+
+    historyData.push({price, usd, ounce, fee, avg, bubble, rsi, signal, ts: Date.now()});
+    apiCounter++;
+    saveAll();
+    updateChart();
+    document.getElementById('lastStatus').innerText = `API ثبت شد: ${formatNumber(price)} تومان | حباب: ${Math.round(bubble)} | RSI: ${rsi.toFixed(2)}`;
+    document.getElementById('doneCount').innerText = auto.done || 0;
+    document.getElementById('leftCount').innerText = Math.max(0, (parseInt(document.getElementById('maxReq').value)||1) - apiCounter);
+  }catch(e){
+    console.error(e);
+    document.getElementById('lastStatus').innerText = 'خطا در دریافت API';
+  }
+}
+
+function onEditLast(){
+  if(historyData.length===0){ alert('داده‌ای برای اصلاح وجود ندارد'); return; }
+  const last = historyData[historyData.length-1];
+  const newVal = prompt('قیمت جدید (تومان):', String(last.price));
+  if(!newVal) return;
+  const p = parseFloat(newVal);
+  if(isNaN(p)){ alert('قیمت نامعتبر'); return; }
+  last.price = p;
+  last.avg = computeAvg(historyData.slice(0,-1), p);
+  last.bubble = p - last.avg;
+  last.rsi = computeRSI_local(historyData.map(h=>h.price),14);
+  saveAll(); updateChart();
+  document.getElementById('lastStatus').innerText = `اصلاح شد: ${formatNumber(p)}`;
+}
+
+function onClearLast(){
+  if(!confirm('آیا آخرین داده حذف شود؟')) return;
+  historyData.pop(); saveAll(); updateChart();
+  document.getElementById('lastStatus').innerText = 'آخرین داده حذف شد';
+}
+
+function onClearAll(){
+  if(!confirm('آیا تمام داده‌ها پاک شوند؟')) return;
+  historyData = []; signals = []; apiCounter = 0; saveAll(); updateChart(); renderSignals();
+  document.getElementById('lastStatus').innerText = 'همه داده‌ها پاک شد';
+}
+
+/* --------- انتخاب بازه‌ها (دکمه رنگی) --------- */
+function selectTime(which, btn){
+  selectedRange = which;
+  ['btnMorning','btnEvening','btnFree'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  btn.classList.add('active');
+}
+
+/* --------- AutoFetch logic --------- */
+function secondsUntil(hm){ // hm like "18:00" or 'free'
+  if(hm==='free') return 0;
+  const [hh,mm] = hm.split(':').map(Number);
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(hh,mm,0,0);
+  return Math.max(0, Math.floor((target - now)/1000));
+}
+function getWindowRange(){
+  if(selectedRange === 'morning') return {start:'10:30', end:'12:00'};
+  if(selectedRange === 'evening') return {start:'18:00', end:'22:00'};
+  return {start:'00:00', end:'23:59'}; // free -> whole day
+}
+
+function startAuto(){
+  if(auto.running){ alert('AutoFetch در حال اجراست'); return; }
+  const maxReq = parseInt(document.getElementById('maxReq').value) || 100;
+  const windowRange = getWindowRange();
+  const now = new Date();
+
+  // compute startTime and endTime Date objects
+  const [sh, sm] = windowRange.start.split(':').map(Number);
+  const [eh, em] = windowRange.end.split(':').map(Number);
+  let start = new Date(now); start.setHours(sh, sm, 0, 0);
+  let end = new Date(now); end.setHours(eh, em, 0, 0);
+  if(windowRange.start === '00:00' && windowRange.end === '23:59'){ start = now; end = new Date(now.getTime() + 24*3600*1000); }
+  if(end <= start) end.setDate(end.getDate() + 1);
+
+  let remainingSec = Math.floor((end - Math.max(now, start))/1000);
+  if(remainingSec <= 0){
+    alert('بازه انتخابی تمام شده یا نامعتبر است. لطفاً بازهٔ دیگری انتخاب کنید یا زمان آزاد را انتخاب کنید.');
+    return;
+  }
+
+  // compute how many requests left for today
+  let requestsLeft = Math.max(0, (maxReq - apiCounter));
+  if(requestsLeft <= 0){ alert('سقف درخواست امروز رسیده.'); return; }
+
+  // interval seconds (at least 3s)
+  let intervalSec = Math.floor(remainingSec / requestsLeft);
+  if(intervalSec < 3) intervalSec = 3;
+
+  auto.running = true;
+  auto.done = 0;
+  auto.left = requestsLeft;
+  auto.intervalSec = intervalSec;
+
+  document.getElementById('doneCount').innerText = auto.done;
+  document.getElementById('leftCount').innerText = auto.left;
+
+  // if now < start, wait until start
+  const wait = Math.max(0, Math.floor((start - now)/1000));
+  if(wait > 0){
+    document.getElementById('nextIn').innerText = `${wait}s (شروع تا ${windowRange.start})`;
+    auto.countdownId = setInterval(()=>{
+      const rem = Math.max(0, Math.floor((start - Date.now())/1000));
+      document.getElementById('nextIn').innerText = rem > 0 ? `${rem}s تا شروع` : 'شروع...';
+      if(rem<=0){ clearInterval(auto.countdownId); runAutoLoop(intervalSec, end); }
+    }, 1000);
+  } else {
+    runAutoLoop(intervalSec, end);
+  }
+}
+
+function runAutoLoop(intervalSec, endTime){
+  // immediate first run
+  (async function step(){
+    if(!auto.running) return;
+    if(apiCounter >= parseInt(document.getElementById('maxReq').value || '1')){ stopAuto(); return; }
+    const now = new Date();
+    if(now >= endTime){ stopAuto(); return; }
+    await onFetchOnce();
+    auto.done++; auto.left = Math.max(0, (parseInt(document.getElementById('maxReq').value || '1') - apiCounter));
+    document.getElementById('doneCount').innerText = auto.done;
+    document.getElementById('leftCount').innerText = auto.left;
+    auto.nextAt = Date.now() + intervalSec*1000;
+    document.getElementById('nextIn').innerText = `${intervalSec}s`;
+
+    auto.timerId = setTimeout(async function loop(){
+      if(!auto.running) return;
+      const now2 = new Date();
+      if(now2 >= endTime){ stopAuto(); return; }
+      await onFetchOnce();
+      auto.done++; auto.left = Math.max(0, (parseInt(document.getElementById('maxReq').value || '1') - apiCounter));
+      document.getElementById('doneCount').innerText = auto.done;
+      document.getElementById('leftCount').innerText = auto.left;
+      auto.nextAt = Date.now() + intervalSec*1000;
+      // schedule next
+      auto.timerId = setTimeout(loop, intervalSec*1000);
+    }, intervalSec*1000);
+    // countdown display
+    if(auto.countdownId) clearInterval(auto.countdownId);
+    auto.countdownId = setInterval(()=>{
+      if(!auto.nextAt){ document.getElementById('nextIn').innerText = '—'; return; }
+      const s = Math.max(0, Math.ceil((auto.nextAt - Date.now())/1000));
+      document.getElementById('nextIn').innerText = `${s}s`;
+    }, 500);
+  })();
+}
+
+function stopAuto(){
+  auto.running = false;
+  if(auto.timerId) clearTimeout(auto.timerId);
+  if(auto.countdownId) clearInterval(auto.countdownId);
+  auto.timerId = null; auto.countdownId = null; auto.nextAt = null; auto.done = 0; auto.left = 0;
+  document.getElementById('nextIn').innerText = '—';
+  document.getElementById('doneCount').innerText = '0';
+  document.getElementById('leftCount').innerText = '0';
+}
+
+/* --------- سیگنال دستی --------- */
+function onSignal(){
+  if(historyData.length===0){ alert('هنوز داده‌ای ثبت نشده'); return; }
+  const last = historyData[historyData.length-1];
+  const support = last.avg * 0.985;
+  const resistance = last.avg * 1.015;
+  let text = '';
+  if(last.bubble < -20000 && last.price <= support){
+    text = `🟢 سیگنال ورود قوی — قیمت نزدیک حمایت: ${formatNumber(support)} | RSI: ${last.rsi.toFixed(2)}`;
+    pushSignal('ورود', text); playSound(); notify(text);
+    last.signal = 'entry';
+  } else if(last.bubble > 20000 && last.price >= resistance){
+    text = `🔴 سیگنال خروج قوی — قیمت نزدیک مقاومت: ${formatNumber(resistance)} | RSI: ${last.rsi.toFixed(2)}`;
+    pushSignal('خروج', text); playSound(); notify(text);
+    last.signal = 'exit';
+  } else {
+    text = `⚖ بازار خنثی — حباب: ${Math.round(last.bubble)} تومان | RSI: ${last.rsi.toFixed(2)}`;
+    pushSignal('خنثی', text);
+    last.signal = null;
+  }
+  saveAll(); updateChart();
+  document.getElementById('signalBox').innerText = text;
+}
+
+/* --------- نوتیفیکیشن --------- */
+function toggleNotify(){
+  notifyActive = !notifyActive;
+  localStorage.setItem('notifyActive', notifyActive ? '1' : '0');
+  const btn = document.getElementById('notifyBtn');
+  if(notifyActive){ btn.classList.remove('off'); btn.classList.add('on'); btn.innerText='🔔 نوتیفیکیشن روشن'; }
+  else { btn.classList.remove('on'); btn.classList.add('off'); btn.innerText='🔔 نوتیفیکیشن خاموش'; }
+}
+
+/* --------- کلید RSI ذخیره --------- */
+function saveRsiKey(){
+  const k = document.getElementById('rsiKey').value.trim();
+  if(!k){ alert('کلید وارد نشده'); return; }
+  localStorage.setItem('rsiKey', k);
+  alert('کلید RSI ذخیره شد');
+}
+
+/* --------- بارگذاری اولیه UI --------- */
+function initUI(){
+  // mark selected time (default free)
+  document.getElementById('btnFree').classList.add('active');
+  renderSignals();
+  updateChart();
+  document.getElementById('doneCount').innerText = 0;
+  document.getElementById('leftCount').innerText = Math.max(0, (parseInt(document.getElementById('maxReq').value)||1) - apiCounter);
+}
+initUI();
+
+</script>
+</body>
+</html>
